@@ -19,6 +19,7 @@ todo
  - add actual settings to the settings menu
  - shaders (maybe)
  - water sounds and fx (splash and moving in water, scrolling perlin texture using shaders)
+ - optimise grass (can do collision detection in chunks)
 
 do eventually
  - input buffering

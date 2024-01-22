@@ -106,6 +106,43 @@
       "spawn_side": "east"
     }
   ],
+  "level_late": [
+    {
+      "type": "GrassPatch",
+      "name": "grass_1",
+      "is_physics": false,
+      "pos": [0, 590],
+      "width": 580
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_2",
+      "is_physics": false,
+      "pos": [580, 880],
+      "width": 454
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_3",
+      "is_physics": false,
+      "pos": [1034, 930],
+      "width": 70
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_4",
+      "is_physics": false,
+      "pos": [1105, 880],
+      "width": 475
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_5",
+      "is_physics": false,
+      "pos": [1574, 750],
+      "width": 346
+    }
+  ],
   "spawn_positions": {
     "default": [300, 880],
     "west": [40, 590],

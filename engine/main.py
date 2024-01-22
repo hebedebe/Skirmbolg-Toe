@@ -131,7 +131,10 @@ class DisplayEngine:
             self.render_object = self.ctx.vertex_array(self.program, [(self.quad_buffer, '2f 2f', 'vert', 'texcoord')])
 
         self.rect = self.surface.get_rect()
-        self.flags = flags
+        if self.shaders:
+            self.flags = flags | pygame.OPENGL | pygame.DOUBLEBUF
+        else:
+            self.flags = flags
         self.clock = pygame.time.Clock()
         self.running = False
         self.delta = 0

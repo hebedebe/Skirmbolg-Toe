@@ -1041,7 +1041,7 @@ class Grass(engine.TickableEntity):
         self.pos = Vector2(pos)
         self.pos.x += random.randint(-1, 1)
 
-        self.influence = 0.04
+        self.influence = 0.07
         self.wind_strength = random.randint(7, 12)
 
         self.width = random.randint(1, 2)
@@ -1068,7 +1068,7 @@ class Grass(engine.TickableEntity):
                                              self.wind_strength * engine.delta())
 
         if self.trigger_rect.colliderect(player.rect):
-            self.rot_spring.angular_velocity -= ((player.vel.x + player.controlled_vel.x) *
+            self.rot_spring.angular_velocity += ((player.vel.x + player.controlled_vel.x) *
                                                  self.influence * engine.delta())
 
         self.rot_spring.update()

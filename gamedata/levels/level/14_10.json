@@ -97,6 +97,15 @@
       "spawn_side": "east"
     }
   ],
+  "level_late": [
+    {
+      "type": "GrassPatch",
+      "name": "grass_1",
+      "is_physics": false,
+      "pos": [0, 880],
+      "width": 1850
+    }
+  ],
   "spawn_positions": {
     "default": [300, 880],
     "west": [40, 880]
