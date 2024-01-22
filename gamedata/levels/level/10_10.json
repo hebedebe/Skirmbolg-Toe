@@ -1,0 +1,82 @@
+{
+  "position": "10_10",
+  "level": [
+    {
+      "type": ["engine", "Sprite"],
+      "name": "mushroom",
+      "is_physics": false,
+      "image": "background_mushroom_1",
+      "pos": [100, 320]
+    },
+    {
+      "type": "Platform",
+      "name": "platform1",
+      "is_physics": true,
+      "pos": [0, 0],
+      "size": [70, 1080]
+    },
+    {
+      "type": "Platform",
+      "name": "platform2",
+      "is_physics": true,
+      "pos": [1850, 0],
+      "size": [70, 618]
+    },
+    {
+      "type": "Platform",
+      "name": "platform3",
+      "is_physics": true,
+      "pos": [0, 0],
+      "size": [1920, 70]
+    },
+    {
+      "type": "Platform",
+      "name": "platform4",
+      "is_physics": true,
+      "pos": [0, 880],
+      "size": [1920, 200]
+    },
+    {
+      "type": "Platform",
+      "name": "platform5",
+      "is_physics": true,
+      "pos": [0, 590],
+      "size": [580, 300]
+    },
+    {
+      "type": "Platform",
+      "name": "platform6",
+      "is_physics": true,
+      "pos": [1574, 750],
+      "size": [346, 360]
+    },
+    {
+      "type": "PushablePhysicsObject",
+      "name": "box",
+      "is_physics": true,
+      "pos": [1050, 500],
+      "size": [40, 50],
+      "animation": "assets/snail/shell",
+      "animation_pos": [-5, 0]
+    },
+    {
+      "type": ["engine","Sprite"],
+      "name": "portal_east",
+      "is_physics": false,
+      "image": "portal",
+      "pos": [1870, 618]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "portal trigger",
+      "is_physics": false,
+      "pos": [1915, 618],
+      "level_name": "11_10",
+      "spawn_side": "west"
+    }
+  ],
+  "spawn_positions": {
+    "default": [500, 500],
+    "east": [1815, 750]
+  }
+}

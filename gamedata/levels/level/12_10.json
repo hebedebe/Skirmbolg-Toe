@@ -1,0 +1,88 @@
+{
+  "position": "12_10",
+  "level": [
+    {
+      "type": ["engine", "Sprite"],
+      "name": "mushroom",
+      "is_physics": false,
+      "image": "background_mushroom_2",
+      "pos": [700, 610]
+    },
+    {
+      "type": "Platform",
+      "name": "border1",
+      "is_physics": true,
+      "pos": [0, 0],
+      "size": [70, 748]
+    },
+    {
+      "type": "Platform",
+      "name": "border2",
+      "is_physics": true,
+      "pos": [1850, 0],
+      "size": [70, 448]
+    },
+    {
+      "type": "Platform",
+      "name": "border3",
+      "is_physics": true,
+      "pos": [0, 0],
+      "size": [1920, 70]
+    },
+    {
+      "type": "Platform",
+      "name": "floor1",
+      "is_physics": true,
+      "pos": [0, 880],
+      "size": [1920, 200]
+    },
+    {
+      "type": "Platform",
+      "name": "floor2",
+      "is_physics": true,
+      "pos": [1320, 580],
+      "size": [600, 500]
+    },
+    {
+      "type": "PushableBouncePad",
+      "name": "bounce_pad",
+      "is_physics": true,
+      "pos": [570, 830]
+    },
+    {
+      "type": ["engine","Sprite"],
+      "name": "portal_east",
+      "is_physics": false,
+      "image": "portal",
+      "pos": [1870, 448]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "portal_trigger_east",
+      "is_physics": false,
+      "pos": [1915, 448],
+      "level_name": "13_10",
+      "spawn_side": "west"
+    },
+    {
+      "type": ["engine","Sprite"],
+      "name": "portal_west",
+      "is_physics": false,
+      "image": "portal_flipped",
+      "pos": [0, 748]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "portal_trigger_west",
+      "is_physics": false,
+      "pos": [0, 748],
+      "level_name": "11_10",
+      "spawn_side": "east"
+    }
+  ],
+  "spawn_positions": {
+    "default": [300, 880],
+    "west": [40, 880],
+    "east": [1815, 580]
+  }
+}

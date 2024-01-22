@@ -1,0 +1,26 @@
+{
+  "name": "Michael Wave",
+  "idle_animation": {
+    "path": "assets/michael_wave/idle",
+    "frame_delay": 0.075
+  },
+  "talking_animation": {
+    "path": "assets/michael_wave/idle",
+    "frame_delay": 0.075
+  },
+  "dialogue_idle_animation": {
+    "path": "",
+    "frame_delay": 0.075
+  },
+  "dialogue_talking_animation": {
+    "path": "",
+    "frame_delay": 0.075
+  },
+  "first_dialogue": [],
+  "repeat_dialogue": [
+    ["I am addicted to the sims"],
+    ["It's microwavin' time"],
+    ["Luaghing crying emoji"],
+    ["rofl"]
+  ]
+}

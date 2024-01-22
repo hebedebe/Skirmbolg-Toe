@@ -1,0 +1,9 @@
+hat collector
+ - a little bit insane
+ - has a mountain of hats behind him
+ - wears a lot of hats
+ - asks you to collect the hat collectibles
+ - tells you how many hats you've collected when you talk to him
+
+ giant owl
+  - looks at you

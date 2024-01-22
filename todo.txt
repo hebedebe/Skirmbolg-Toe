@@ -1,0 +1,30 @@
+todo
+ - add character and global savedata
+ - add hat collectibles
+ - dynamic vines
+ - dynamic grass
+ - thread things that should be threaded
+ - switch all drawing to the draw function and thread the update function
+ - fix inconsistent drag with framerate changes / low fps
+ - make light function use light_rect if available and improve player light_rect
+ - switch lights function to the visibility polygons algorithm (https://www.redblobgames.com/articles/visibility/)
+ - fix dynamic water bugging and crashing on low framerates
+ - more levels
+ - npcs
+ - dialogue system
+ - level editor
+ - automatic serialization
+ - fix bounce puffs animation flickering
+ - change bounce puffs art/head animation
+ - add actual settings to the settings menu
+ - shaders (maybe)
+ - water sounds and fx (splash and moving in water)
+
+do eventually
+ - pregenerate pitched audio files when loading rather than at runtime
+ - improve collisions
+ - snail shells slime trail (maybe)
+
+kate requests
+ - fireflies (in level and on main menu)
+ - make snail head poke out of its shell
