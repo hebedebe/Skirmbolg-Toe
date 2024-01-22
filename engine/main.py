@@ -193,7 +193,7 @@ class DisplayEngine:
                 frame_tex = self.surf_to_texture(self.surface)
                 frame_tex.use(0)
                 self.program['tex'] = 0
-                self.program['time'] = self.time
+                self.program['colour_correction'] = (1, 1, 0.9)
                 self.render_object.render(mode=moderngl.TRIANGLE_STRIP)
 
             pygame.display.flip()
@@ -252,7 +252,7 @@ class Manager:
         monitor = get_monitors()[0]
         print(f"Detected monitor {monitor}")
         pygame.display.set_mode((monitor.width, monitor.height),
-                                self.engine.flags | pygame.FULLSCREEN | pygame.DOUBLEBUF)
+                                self.engine.flags)
 
     def add_state(self, key, state, *args):
         self.controls[key] = StateControl(state, *args)

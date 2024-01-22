@@ -656,6 +656,25 @@ class Platform(engine.TickableEntity):
             pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
 
 
+class GrassyPlatform(Platform):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.is_grass_added = False
+
+    def update(self, *args):
+        if not self.is_grass_added:
+            grass = GrassPatch(
+                self.pos,
+                self.size.x
+            )
+            scene = args[0]
+            scene.add_buffered_object(grass)
+            self.is_grass_added = True
+
+        super().update(*args)
+
+
+
 class PassablePlatform(Platform):
     def __init__(self, *args):
         super().__init__(*args)
