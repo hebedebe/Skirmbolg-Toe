@@ -1,14 +1,14 @@
 todo
- - add character and global savedata
- - add hat collectibles
  - dynamic vines
- - dynamic grass
  - thread things that should be threaded
  - switch all drawing to the draw function and thread the update function
  - fix inconsistent drag with framerate changes / low fps
+ - switch single typed lists to arrays (from the array module)
  - make light function use light_rect if available and improve player light_rect
  - switch lights function to the visibility polygons algorithm (https://www.redblobgames.com/articles/visibility/)
  - fix dynamic water bugging and crashing on low framerates
+ - fix pygame_gui mouse position scaling
+ - decals
  - more levels
  - npcs
  - dialogue system
@@ -18,9 +18,10 @@ todo
  - change bounce puffs art/head animation
  - add actual settings to the settings menu
  - shaders (maybe)
- - water sounds and fx (splash and moving in water)
+ - water sounds and fx (splash and moving in water, scrolling perlin texture using shaders)
 
 do eventually
+ - input buffering
  - pregenerate pitched audio files when loading rather than at runtime
  - improve collisions
  - snail shells slime trail (maybe)
@@ -28,3 +29,6 @@ do eventually
 kate requests
  - fireflies (in level and on main menu)
  - make snail head poke out of its shell
+
+ada requests
+ - make him smoke weed

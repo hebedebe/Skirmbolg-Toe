@@ -125,6 +125,20 @@
         [1574, 881],
         [580, 881]
       ]
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_1",
+      "is_physics": false,
+      "pos": [0, 590],
+      "width": 580
+    },
+    {
+      "type": "GrassPatch",
+      "name": "grass_2",
+      "is_physics": false,
+      "pos": [1574, 590],
+      "width": 346
     }
   ],
   "spawn_positions": {

@@ -549,8 +549,10 @@ class SliceSprite(pygame.sprite.Sprite):  # Stolen from the internet
         x, y, w, h = self._rect
         mw = w - l - r
         mh = h - t - b
-        if mw < 0: raise SliceSprite.width_error
-        if mh < 0: raise SliceSprite.height_error
+        if mw < 0:
+            raise SliceSprite.width_error
+        if mh < 0:
+            raise SliceSprite.height_error
 
         scales = [
             (l, t), (mw, t), (r, t),

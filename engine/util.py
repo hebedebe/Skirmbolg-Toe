@@ -8,25 +8,6 @@ import engine.settings
 import engine
 
 
-class ThreadWithReturnValue(Thread):
-
-    def __init__(self, group=None, target=None, name=None,
-                 args=(), kwargs=None, Verbose=None):
-        Thread.__init__(self, group, target, name, args, kwargs)
-        if kwargs is None:
-            kwargs = {}
-        self._return = None
-
-    def run(self):
-        if self._target is not None:
-            self._return = self._target(*self._args,
-                                        **self._kwargs)
-
-    def join(self, *args):
-        Thread.join(self, *args)
-        return self._return
-
-
 # Stolen from DaFluffyPotato
 def clip(surface, x, y, x_size, y_size):  # Get a part of the image
     handle_surface = surface.copy()  # Sprite that will get process later

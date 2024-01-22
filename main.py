@@ -5,6 +5,7 @@ import os
 import pickle
 import random
 import sys
+from array import array
 
 import pygame
 import pygame.geometry
@@ -19,10 +20,7 @@ from engine.util import play_randomly_pitched_sound
 try:
     import pyi_splash
 
-    # Update the text on the splash screen
     pyi_splash.update_text("Loading...")
-
-    # Close the splash screen. It does not matter when the call
     pyi_splash.close()
 except ModuleNotFoundError:
     print("Not a pyinstaller program")
@@ -361,12 +359,10 @@ class PhysicsObject(engine.TickableEntity):
 
     def updateBoundingPoints(self):
         self.rect = pygame.Rect(self.pos, (self.size.x, self.size.y))
-        self.check_box_bottom = pygame.Rect(add_tuples(self.pos, (0, self.size.y)), (self.size.x, self.hitbox_depth))
-        self.check_box_right = pygame.Rect(add_tuples(self.pos, (self.size.x, 0)), (self.hitbox_depth, self.size.y))
-        self.check_box_left = pygame.Rect(add_tuples(self.pos, (-self.hitbox_depth, 0)),
-                                          (self.hitbox_depth, self.size.y))
-        self.check_box_top = pygame.Rect(add_tuples(self.pos, (0, -self.hitbox_depth)),
-                                         (self.size.x, self.hitbox_depth))
+        self.check_box_bottom = pygame.Rect(self.pos + (0, self.size.y), (self.size.x, self.hitbox_depth))
+        self.check_box_right = pygame.Rect(self.pos + (self.size.x, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_left = pygame.Rect(self.pos + (-self.hitbox_depth, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_top = pygame.Rect(self.pos + (0, -self.hitbox_depth), (self.size.x, self.hitbox_depth))
 
     def update(self, *args):
         # Physics and collisions
@@ -379,7 +375,7 @@ class PhysicsObject(engine.TickableEntity):
 
         self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
 
-        temp_vel = add_tuples(self.vel, (0, self.gravity * engine.delta()))
+        temp_vel = self.vel + (0, self.gravity * engine.delta())
 
         # Check bottom for collisions
         self.updateBoundingPoints()
@@ -472,19 +468,17 @@ class Player(engine.TickableEntity):
         self.hitbox_depth = 4
 
         self.rect = pygame.Rect(self.pos, self.size)
-        self.check_box_bottom = pygame.Rect(add_tuples(self.pos, (0, self.size.y)), (self.size.x, self.hitbox_depth))
-        self.check_box_right = pygame.Rect(add_tuples(self.pos, (self.size.x, 0)), (self.hitbox_depth, self.size.y))
-        self.check_box_left = pygame.Rect(add_tuples(self.pos, (-self.hitbox_depth, 0)),
-                                          (self.hitbox_depth, self.size.y))
-        self.check_box_top = pygame.Rect(add_tuples(self.pos, (0, -self.hitbox_depth)),
-                                         (self.size.x, self.hitbox_depth))
+        self.check_box_bottom = pygame.Rect(self.pos + (0, self.size.y), (self.size.x, self.hitbox_depth))
+        self.check_box_right = pygame.Rect(self.pos + (self.size.x, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_left = pygame.Rect(self.pos - (self.hitbox_depth, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_top = pygame.Rect(self.pos - (0, self.hitbox_depth), (self.size.x, self.hitbox_depth))
 
         self.touching_top = False
         self.touching_bottom = False
         self.touching_right = False
         self.touching_left = False
 
-        self.ground_particle_position = add_tuples(self.pos, (self.size.x / 2, self.size.y))
+        self.ground_particle_position = self.pos + (self.size.x / 2, self.size.y)
 
         self.walk_anim_left = engine.Animation("assets/skirmbolg/walk", 0.075)
         self.walk_anim_right = engine.Animation("assets/skirmbolg/walk", 0.075).flip()
@@ -504,14 +498,12 @@ class Player(engine.TickableEntity):
 
     def updateBoundingPoints(self):
         self.rect = pygame.Rect(self.pos, self.size)
-        self.check_box_bottom = pygame.Rect(add_tuples(self.pos, (0, self.size.y)), (self.size.x, self.hitbox_depth))
-        self.check_box_right = pygame.Rect(add_tuples(self.pos, (self.size.x, 0)), (self.hitbox_depth, self.size.y))
-        self.check_box_left = pygame.Rect(add_tuples(self.pos, (-self.hitbox_depth, 0)),
-                                          (self.hitbox_depth, self.size.y))
-        self.check_box_top = pygame.Rect(add_tuples(self.pos, (0, -self.hitbox_depth)),
-                                         (self.size.x, self.hitbox_depth))
+        self.check_box_bottom = pygame.Rect(self.pos + (0, self.size.y), (self.size.x, self.hitbox_depth))
+        self.check_box_right = pygame.Rect(self.pos + (self.size.x, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_left = pygame.Rect(self.pos - (self.hitbox_depth, 0), (self.hitbox_depth, self.size.y))
+        self.check_box_top = pygame.Rect(self.pos - (0, self.hitbox_depth), (self.size.x, self.hitbox_depth))
 
-        self.ground_particle_position = add_tuples(self.pos, (self.size.x / 2, self.size.y))
+        self.ground_particle_position = self.pos + (self.size.x / 2, self.size.y)
 
     def update(self, *args):
         # Physics and collisions
@@ -673,7 +665,7 @@ class PassablePlatform(Platform):
     def update(self, *args):
         scene = args[0]
         player = scene.objects["player"]
-        if player.pos.x + player.size[1] - player.hitbox_depth < self.pos[1]:
+        if player.pos.y + player.size.y - player.hitbox_depth < self.pos.y:
             self.rect = self.perma_rect
         else:
             self.rect = pygame.Rect(0, 0, 0, 0)
@@ -706,7 +698,7 @@ class BouncePad(engine.TickableEntity):
         self.pos = Vector2(pos)
         self.trigger_rect = pygame.Rect(self.pos, (50, 50))
 
-        self.particle_position = add_tuples(self.pos, (25, 15))
+        self.particle_position = self.pos + (25, 15)
 
         self.bounce_force = -1200
 
@@ -814,7 +806,7 @@ class PushableBouncePad(BouncePad):
 
         self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
 
-        temp_vel = add_tuples(self.vel, (0, self.gravity * engine.delta()))
+        temp_vel = self.vel + (0, self.gravity * engine.delta())
 
         # Check bottom for collisions
         self.updateBoundingPoints()
@@ -886,8 +878,8 @@ class BouncePuff(engine.TickableEntity):
 
         self.anim_timer = engine.Timer(len(self.head_bounce_anim.frames) * self.head_bounce_anim.frame_delay)
 
-        self.bounce_force = Vector2(-2500,
-                                    -1000)  # x value needs to be higher since there's no drag calculation on the player's y velocity
+        # x value needs to be higher since there's no drag calculation on the player's y velocity
+        self.bounce_force = Vector2(-2500, -1000)
 
     def serialize(self):
         self.head_idle_anim.serialize()
@@ -992,15 +984,17 @@ class Spring:
         self.strength = strength
         self.dampening = dampening
 
-    def update_vel(self, target_pos=None):
+        self.gravity = Vector2(0, 0)
+
+    def update_vel(self, target_pos: pygame.Vector2 = None):
         if target_pos is None:
             target_pos = self.target_pos
         distance = target_pos - self.pos
         force = distance * self.strength
         force_delta = force * engine.delta()
 
-        self.vel = self.vel + force_delta
-        self.vel = self.vel.lerp(Vector2(0, 0), self.dampening * engine.delta())
+        self.vel = self.vel + force_delta + (self.gravity * engine.delta())
+        self.vel = self.vel.lerp(Vector2(0, 0), engine.math.clamp(self.dampening * engine.delta(), 0, 1))
 
     def update(self):
         self.pos = self.pos + self.vel * engine.delta()
@@ -1008,6 +1002,91 @@ class Spring:
         if engine.debug:
             surface = engine.get_surface()
             pygame.draw.circle(surface, (255, 255, 200), self.pos, 5, 1)
+
+
+class RotationSpring:
+    def __init__(self, rotation, target_rotation, strength=1, dampening=1):
+        self.rotation = rotation
+        self.target_rotation = target_rotation
+        self.angular_velocity = 0
+
+        self.strength = strength
+        self.dampening = dampening
+
+    def update(self):
+        self.angular_velocity += (self.target_rotation - self.rotation) * engine.delta() * self.strength
+        self.angular_velocity = engine.math.lerp(self.angular_velocity, 0, self.dampening * engine.delta())
+
+        self.rotation += self.angular_velocity
+
+
+class GrassPatch(engine.TickableEntity):
+    def __init__(self, pos, width):
+        self.pos = Vector2(pos)
+        self.width = width
+
+        self.interval = 3 if engine.settings.getConfig().getboolean("graphics", "fancy_grass") else 4
+
+        self.grass = [Grass(self.pos + (x * self.interval, 0)) for x in range(int(self.width / self.interval))]
+        random.shuffle(self.grass)
+
+    def update(self, *args):
+        if engine.settings.getConfig().getboolean("graphics", "grass"):
+            for g in self.grass:
+                g.update(*args)
+
+
+class Grass(engine.TickableEntity):
+    def __init__(self, pos):
+        self.pos = Vector2(pos)
+        self.pos.x += random.randint(-1, 1)
+
+        self.influence = 0.04
+        self.wind_strength = random.randint(7, 12)
+
+        self.width = random.randint(1, 2)
+        self.height = random.randint(5, 20)
+        self.trigger_rect = pygame.Rect(0, 0, self.width, self.height)
+        self.trigger_rect.midbottom = self.pos
+
+        self.damp = random.uniform(0.7, 1.5)
+        self.strength = random.uniform(0.7, 1.5)
+
+        self.rot_spring = RotationSpring(0, 0, self.strength, self.damp)
+
+        self.colour = random.choice((
+            (25, 60, 62),
+            (38, 92, 66),
+            (62, 137, 72)
+        ))
+
+    def update(self, *args):
+        scene = args[0]
+        player = scene.objects["player"]
+
+        self.rot_spring.angular_velocity -= (math.sin(engine.manager.engine.time) *
+                                             self.wind_strength * engine.delta())
+
+        if self.trigger_rect.colliderect(player.rect):
+            self.rot_spring.angular_velocity -= ((player.vel.x + player.controlled_vel.x) *
+                                                 self.influence * engine.delta())
+
+        self.rot_spring.update()
+
+        grass_tip = self.pos + engine.VEC2_UP.rotate(self.rot_spring.rotation) * self.height
+
+        surface = engine.get_surface()
+        points = [self.pos - (self.width, 0), self.pos + (self.width, 0), grass_tip]
+
+        pygame.draw.polygon(surface, self.colour, points)
+        pygame.draw.lines(surface, self.colour, False, points, 3)
+
+        if engine.settings.getConfig().getboolean("graphics", "fancy_grass"):
+            for p in points:
+                pygame.draw.circle(surface, self.colour, p, 1.5)
+
+        if engine.debug:
+            pygame.draw.line(surface, (0, 0, 255), self.pos, grass_tip, 1)
 
 
 class Water(engine.TickableEntity):
@@ -1045,17 +1124,17 @@ class Water(engine.TickableEntity):
                 s.vel.y += player.vel.y * self.influence * engine.delta()
 
             if i > 0:
-                pos = [
+                pos = Vector2(
                     s.pos.x,
                     self.springs[i - 1].pos.y
-                ]
+                )
                 s.update_vel(pos)
                 s.update_vel(pos)
             if i < len(self.springs) - 1:
-                pos = [
+                pos = Vector2(
                     s.pos.x,
                     self.springs[i + 1].pos.y
-                ]
+                )
                 s.update_vel(pos)
                 s.update_vel(pos)
             s.update_vel()
@@ -1078,7 +1157,7 @@ class Water(engine.TickableEntity):
 
 class Light(engine.TickableEntity):
     def __init__(self, pos, radius):
-        self.pos = [*pos]
+        self.pos = Vector2(pos)
         self.radius = radius
         self.angle_step_size = 0  # Angle between each ray (in degrees)
         match engine.settings.getConfig().get("graphics", "light_quality"):
@@ -1098,7 +1177,6 @@ class Light(engine.TickableEntity):
 
     def update(self, *args):
         scene = args[0]
-        player = scene.objects["player"]
 
         touched_objects = []
 
@@ -1178,7 +1256,7 @@ class SaveData:
         self.player_saves = [
             {
                 "room": "10_10"
-            } for i in range(2)
+            } for _ in range(2)
         ]
 
     def save(self, path="gamedata/savedata/save.pickle"):

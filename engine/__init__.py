@@ -19,7 +19,12 @@ print(f"Initialised {colorama.Fore.LIGHTGREEN_EX + NAME + colorama.Fore.RESET} "
 
 debug = False
 
-infinity = float("inf")
+INFINITY = float("inf")
+
+VEC2_UP = pygame.Vector2(0, -1)
+VEC2_DOWN = pygame.Vector2(0, 1)
+VEC2_LEFT = pygame.Vector2(-1, 0)
+VEC2_RIGHT = pygame.Vector2(1, 0)
 
 
 def add_thread(thread):

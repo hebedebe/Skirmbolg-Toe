@@ -6,4 +6,7 @@ hat collector
  - tells you how many hats you've collected when you talk to him
 
  giant owl
-  - looks at you
+ - looks at you
+
+game names
+ - skirmbolg & the world tree

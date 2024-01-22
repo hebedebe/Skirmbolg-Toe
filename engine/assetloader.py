@@ -1,6 +1,5 @@
 import glob
 import pygame
-import pygame._sdl2.video
 from colorama import Back, Fore
 import time
 import colorama

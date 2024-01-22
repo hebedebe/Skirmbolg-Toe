@@ -37,6 +37,13 @@
       "size": [550, 50]
     },
     {
+      "type": "PassablePlatform",
+      "name": "platform2",
+      "is_physics": true,
+      "pos": [1250, 450],
+      "size": [870, 50]
+    },
+    {
       "type": "Collectible",
       "name": "collectible",
       "is_physics": false,
