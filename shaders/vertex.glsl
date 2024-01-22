@@ -1,10 +1,12 @@
 #version 330 core
 
-in vec2 vert;
-in vec2 texcoord;
-out vec2 uvs;
+layout (location = 0) in vec2 vert;
+layout (location = 1) in vec2 texcoord;
 
-void main() {
-    uvs = texcoord;
+out vec2 fragmentTexCoord;
+
+void main()
+{
+    fragmentTexCoord = texcoord;
     gl_Position = vec4(vert, 0.0, 1.0);
 }
