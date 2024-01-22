@@ -17,9 +17,8 @@ todo
  - fix bounce puffs animation flickering
  - change bounce puffs art/head animation
  - add actual settings to the settings menu
- - shaders (maybe)
  - water sounds and fx (splash and moving in water, scrolling perlin texture using shaders)
- - optimise grass (can do collision detection in chunks)
+ - optimise grass (do collision detection in chunks?)
 
 do eventually
  - input buffering

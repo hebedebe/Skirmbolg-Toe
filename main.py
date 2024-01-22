@@ -5,10 +5,8 @@ import os
 import pickle
 import random
 import sys
-from array import array
 
 import pygame
-import pygame.geometry
 import pygame_gui as gui
 from pygame import Vector2
 
@@ -516,6 +514,7 @@ class Player(engine.TickableEntity):
 
         # Apply drag
         self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
+        # self.vel = self.vel.lerp(Vector2(), self.drag * engine.delta())
 
         # Calculate velocity for collision checks
         temp_vel = self.vel + self.gravity * engine.delta()
@@ -668,11 +667,10 @@ class GrassyPlatform(Platform):
                 self.size.x
             )
             scene = args[0]
-            scene.add_buffered_object(grass)
+            scene.add_buffered_object(f"{self}_grass", grass)
             self.is_grass_added = True
 
         super().update(*args)
-
 
 
 class PassablePlatform(Platform):
@@ -1024,7 +1022,7 @@ class Spring:
 
 
 class RotationSpring:
-    def __init__(self, rotation, target_rotation, strength=1, dampening=1):
+    def __init__(self, rotation, target_rotation, strength=1.0, dampening=1.0):
         self.rotation = rotation
         self.target_rotation = target_rotation
         self.angular_velocity = 0
@@ -1046,11 +1044,19 @@ class GrassPatch(engine.TickableEntity):
 
         self.interval = 3 if engine.settings.getConfig().getboolean("graphics", "fancy_grass") else 4
 
+        self.grass = []
+
+    def generateGrass(self):
         self.grass = [Grass(self.pos + (x * self.interval, 0)) for x in range(int(self.width / self.interval))]
         random.shuffle(self.grass)
 
+    def serialize(self):
+        self.grass = []
+
     def update(self, *args):
         if engine.settings.getConfig().getboolean("graphics", "grass"):
+            if not self.grass:
+                self.generateGrass()
             for g in self.grass:
                 g.update(*args)
 
@@ -1060,7 +1066,10 @@ class Grass(engine.TickableEntity):
         self.pos = Vector2(pos)
         self.pos.x += random.randint(-1, 1)
 
-        self.influence = 0.07
+        self.influence = Vector2(
+            random.uniform(0.05, 0.09),
+            random.uniform(0.1, 0.3)
+        )
         self.wind_strength = random.randint(7, 12)
 
         self.width = random.randint(1, 2)
@@ -1083,12 +1092,17 @@ class Grass(engine.TickableEntity):
         scene = args[0]
         player = scene.objects["player"]
 
+        if not player:
+            return
+
         self.rot_spring.angular_velocity -= (math.sin(engine.manager.engine.time) *
                                              self.wind_strength * engine.delta())
 
         if self.trigger_rect.colliderect(player.rect):
             self.rot_spring.angular_velocity += ((player.vel.x + player.controlled_vel.x) *
-                                                 self.influence * engine.delta())
+                                                 self.influence.x * engine.delta())
+            self.rot_spring.angular_velocity += ((player.vel.y + player.controlled_vel.y) *
+                                                 self.influence.y * random.choice((-1, 1)) * engine.delta())
 
         self.rot_spring.update()
 
@@ -1239,6 +1253,9 @@ class Collectible(engine.TickableEntity):
 
         scene: Level = args[0]
         player = scene.objects["player"]
+
+        if not player:
+            return
 
         if self.trigger_rect.colliderect(player.rect):
             self.enabled = False

@@ -1,0 +1,6 @@
+pygame-ce
+pygame-gui
+samplerate
+colorama
+moderngl
+screeninfo

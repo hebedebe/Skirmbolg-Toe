@@ -1,4 +1,5 @@
 import pygame
+import pygame.geometry
 import moderngl
 from array import array
 from screeninfo import get_monitors
@@ -101,6 +102,7 @@ class StateMachine:
 class DisplayEngine:
     def __init__(self, manager, caption, width, height, fps, flags):
         pygame.display.set_caption(caption)
+        self.width, self.height = width, height
         self.shaders = engine.settings.getConfig().getboolean("graphics", "shaders")
         self.display = None
         if (width, height) != (1920, 1080):
@@ -186,6 +188,8 @@ class DisplayEngine:
             if engine.debug:
                 self.fps_counter.text = f"FPS: {int(self.clock.get_fps())}"
                 self.fps_counter.update()
+
+            frame_tex = None
             if self.do_display_scaling:
                 scaled_surf = pygame.transform.scale_by(self.surface, self.display.get_width() / 1920)
                 self.display.blit(scaled_surf, (0, (self.display.get_height() - scaled_surf.get_height()) / 2))
@@ -193,7 +197,7 @@ class DisplayEngine:
                 frame_tex = self.surf_to_texture(self.surface)
                 frame_tex.use(0)
                 self.program['tex'] = 0
-                self.program['colour_correction'] = (1, 1, 0.9)
+                self.program['colour_correction'] = (1, 1, 1.1)
                 self.render_object.render(mode=moderngl.TRIANGLE_STRIP)
 
             pygame.display.flip()
@@ -212,7 +216,7 @@ class StateControl:
         self.state = state
         self.args = args
 
-    def get(self, manager, *args):
+    def get(self, manager):
         if not self.active:
             return self.state(manager, *self.args)
 
