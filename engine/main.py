@@ -1,8 +1,11 @@
 import pygame
+import moderngl
+from array import array
 from screeninfo import get_monitors
 from glob import glob
 
 import engine
+import engine.settings
 from engine.assetloader import Assets
 import engine.util
 
@@ -98,23 +101,60 @@ class StateMachine:
 class DisplayEngine:
     def __init__(self, manager, caption, width, height, fps, flags):
         pygame.display.set_caption(caption)
+        self.shaders = engine.settings.getConfig().getboolean("graphics", "shaders")
+        self.display = None
         if (width, height) != (1920, 1080):
             self.do_display_scaling = True
-            self.display = pygame.display.set_mode((width, height), flags, 32)
+            if self.shaders:
+                self.display = pygame.display.set_mode((width, height), flags, 32)
+            else:
+                self.display = pygame.display.set_mode((width, height), flags | pygame.OPENGL | pygame.DOUBLEBUF, 32)
             self.surface = pygame.Surface((1920, 1080), flags, 32)
         else:
             self.do_display_scaling = False
-            self.surface = pygame.display.set_mode((width, height), flags, 32)
+            if self.shaders:
+                self.display = pygame.display.set_mode((width, height), flags | pygame.OPENGL | pygame.DOUBLEBUF, 32)
+                self.surface = pygame.Surface((width, height), flags, 32)
+            else:
+                self.surface = pygame.display.set_mode((width, height), flags, 32)
+
+        if self.shaders:
+            self.ctx = moderngl.create_context()
+            self.quad_buffer = self.ctx.buffer(data=array('f', [
+                # position (x, y), uv coords (x, y)
+                -1.0, 1.0, 0.0, 0.0,  # top left
+                1.0, 1.0, 1.0, 0.0,  # top right
+                -1.0, -1.0, 0.0, 1.0,  # bottom left
+                1.0, -1.0, 1.0, 1.0,  # bottom right
+            ]))
+            self.program = self.loadShader("shaders/vertex.glsl", "shaders/fragment.glsl")
+            self.render_object = self.ctx.vertex_array(self.program, [(self.quad_buffer, '2f 2f', 'vert', 'texcoord')])
+
         self.rect = self.surface.get_rect()
         self.flags = flags
         self.clock = pygame.time.Clock()
         self.running = False
         self.delta = 0
+        self.time = 0
         self.fps = fps
         self.fps_counter = engine.Text((0, 20), "FPS: error", 24)
         self.manager = manager
 
         self.state_machine = StateMachine(manager)
+
+    def loadShader(self, vert_path, frag_path):
+        with open(vert_path, "r") as vert_file:
+            vert = vert_file.read()
+        with open(frag_path, "r") as frag_file:
+            frag = frag_file.read()
+        return self.ctx.program(vertex_shader=vert, fragment_shader=frag)
+
+    def surf_to_texture(self, surf: pygame.Surface):
+        tex = self.ctx.texture(surf.get_size(), 4)
+        tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
+        tex.swizzle = 'BGRA'
+        tex.write(surf.get_view('1'))
+        return tex
 
     def loop(self, state=None):
         self.running = True
@@ -137,14 +177,27 @@ class DisplayEngine:
             state.on_update()
             self.manager.ui_manager.update(self.delta)
             self.manager.ui_manager.draw_ui(self.surface)
+
+            self.time += self.delta
+
             if engine.debug:
                 self.fps_counter.text = f"FPS: {int(self.clock.get_fps())}"
                 self.fps_counter.update()
             if self.do_display_scaling:
                 scaled_surf = pygame.transform.scale_by(self.surface, self.display.get_width() / 1920)
                 self.display.blit(scaled_surf, (0, (self.display.get_height() - scaled_surf.get_height()) / 2))
+            elif self.shaders:
+                frame_tex = self.surf_to_texture(self.surface)
+                frame_tex.use(0)
+                self.program['tex'] = 0
+                self.program['time'] = self.time
+                self.render_object.render(mode=moderngl.TRIANGLE_STRIP)
 
             pygame.display.flip()
+
+            if self.shaders:
+                frame_tex.release()
+
             self.delta = (self.clock.tick(self.fps) / 1000)
 
         engine.join_all_threads()
