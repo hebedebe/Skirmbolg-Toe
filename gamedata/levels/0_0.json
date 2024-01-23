@@ -1,8 +1,27 @@
 {
+  "position": "0_0",
   "layout": [
     "############################################################",
     "#                                                          #",
     "#                                                          #",
+    "#                                                           ",
+    "#                                                           ",
+    "#                                                           ",
+    "#                                                           ",
+    "#                                                           ",
+    "#                                                    GGGGGGG",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "                                                           #",
+    "                                                           #",
+    "                                                           #",
+    "                                                           #",
+    "                                                           #",
+    "GGGGGGG       GGGGGGGGGGGGGG                               #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                        GGGGGGGGGGGGGG    #",
     "#                                                          #",
     "#                                                          #",
     "#                                                          #",
@@ -10,32 +29,38 @@
     "#                                                          #",
     "#                                                          #",
     "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                        PPPPPPPPPPPPPP    #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                        ##############    #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                          #",
-    "#                                                      #####",
-    "#                                                      #####",
-    "#                                                      #####",
-    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#####"
+    "                                                           #",
+    "                                                           #",
+    "                                                       GGGG#",
+    "                                                       #####",
+    "                                                       #####",
+    "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#####"
   ],
   "entities": [
+    {
+      "type": "Sprite",
+      "name": "background mushroom",
+      "args": [
+        "background_mushroom_1",
+        [25, 33]
+      ]
+    },
+    {
+      "type": "Sprite",
+      "name": "background mushroom 2",
+      "args": [
+        "background_mushroom_2",
+        [48, 20]
+      ]
+    },
+    {
+      "type": "Sprite",
+      "name": "background flower",
+      "args": [
+        "background_flower_1",
+        [14, 17]
+      ]
+    },
     {
       "type": "BouncePad",
       "name": "mushroom",
@@ -44,18 +69,76 @@
       ]
     },
     {
-      "type": "Sprite",
-      "name": "background mushroom",
+      "type": "BouncePuff",
+      "name": "puff",
       "args": [
-        "background_mushroom_1",
-        [30, 25]
+        [33.5, 19],
+        [33.5, 33]
+      ]
+    },
+    {
+      "type": "Collectible",
+      "name": "collectible",
+      "args": [
+        [57.2, 9.2]
+      ]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "level trigger up left",
+      "args": [
+        [0, 17],
+        "-1_1",
+        "east bottom"
+      ]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "level trigger left",
+      "args": [
+        [0, 33],
+        "-1_0",
+        "east"
+      ]
+    },
+    {
+      "type": "LevelTrigger",
+      "name": "level trigger up right",
+      "args": [
+        [60, 8],
+        "-1_0",
+        "west top"
+      ]
+    },
+    {
+      "type": "BouncePad",
+      "name": "mushroom 2",
+      "args": [
+        [46, 18.5]
+      ]
+    },
+    {
+      "type": "BouncePuff",
+      "name": "puff 2",
+      "args": [
+        [50, 13.5],
+        [50, 20]
       ]
     }
   ],
   "late_entities": [],
-  "physics_entities": [],
+  "physics_entities": [
+    {
+      "type": "PushableStrongBouncePad",
+      "name": "pushable mushroom",
+      "args": [
+        [16.5, 15.5]
+      ]
+    }
+  ],
   "late_physics_entities": [],
   "spawn_positions": {
-    "default": [29, 33]
+    "default": [29, 33],
+    "west": [0.5, 33]
   }
 }

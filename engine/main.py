@@ -141,10 +141,10 @@ class DisplayEngine:
         self.clock = pygame.time.Clock()
         self.running = False
         self.delta = 0
-        self.delta_counter = engine.Text((20, 50), "Delta: error", 24)
+        self.delta_counter = engine.Text((35, 65), "Delta: error", 24)
         self.time = 0
         self.fps = fps
-        self.fps_counter = engine.Text((20, 20), "FPS: error", 24)
+        self.fps_counter = engine.Text((35, 35), "FPS: error", 24)
         self.manager = manager
 
         self.state_machine = StateMachine(manager)
@@ -177,6 +177,9 @@ class DisplayEngine:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_BACKQUOTE:
                             engine.debug = not engine.debug
+                        if event.key == pygame.K_F6:
+                            print("Reloading assets...")
+                            engine.manager.reloadAssets()
                     state.on_event(event)
                     self.manager.ui_manager.process_events(event)
 
@@ -237,13 +240,17 @@ class Manager:
         self.assets = Assets()
         self.globals = {}
 
+    def reloadAssets(self):
+        self.assets = Assets()
+
     def delta(self):
         return self.engine.delta
 
     def blit(self, surf, pos):
         self.engine.surface.blit(surf, pos + self.camera)
 
-    def blit_center(self, surf, pos):
+    def blit_center(self, surf, pos_):
+        pos = pygame.Vector2(pos_)
         self.engine.surface.blit(surf,
                                  (pos.x - surf.get_width() / 2 + self.camera.x,
                                   pos.y - surf.get_height() / 2 + self.camera.y))

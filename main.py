@@ -5,6 +5,7 @@ import os
 import pickle
 import random
 import sys
+import pygame.gfxdraw
 
 import pygame
 import pygame_gui as gui
@@ -203,11 +204,11 @@ class CharacterSelect(engine.State):
         if event.type == gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.objects["skirmbolg button"]:
                 engine.manager.globals["player type"] = 0
-                start_level = load_json_level("gamedata/levels/0_0.json")
+                start_level = load_json_level("gamedata/levels/-1_0.json")
                 self.manager.set_state(start_level)
             elif event.ui_element == self.objects["toe button"]:
                 engine.manager.globals["player type"] = 1
-                start_level = load_json_level("gamedata/levels/0_0.json")
+                start_level = load_json_level("gamedata/levels/-1_0.json")
                 self.manager.set_state(start_level)
             elif event.ui_element == self.objects["back button"]:
                 self.manager.set_state(MainMenu(self.manager))
@@ -317,6 +318,13 @@ class Level(engine.State):
                 cached_scene = self
                 pause_menu = PauseMenu(engine.manager)
                 engine.manager.set_state(pause_menu, clear_threads=True)
+            elif event.key == pygame.K_F5:
+                level = load_json_level(f"gamedata/levels/{self.position}.json")
+                engine.manager.set_state(level)
+            elif event.key == pygame.K_F7:
+                engine.manager.reloadAssets()
+                level = load_json_level(f"gamedata/levels/{self.position}.json")
+                engine.manager.set_state(level)
 
 
 class PhysicsObject(engine.TickableEntity):
@@ -484,7 +492,9 @@ class Player(engine.TickableEntity):
         self.footstep_timer = engine.Timer(0.085)
 
         self.gravity = Vector2(0, 2400)
+        self.gravity_multiplier = Vector2(0, 2)
         self.drag = 10
+        self.controlled_drag = 10
 
         self.allow_movement = True
 
@@ -507,11 +517,12 @@ class Player(engine.TickableEntity):
         self.touching_left = False
 
         # Apply drag
-        # self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
-        self.vel.x *= self.drag * engine.delta()
+        self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
 
         # Calculate velocity for collision checks
-        temp_vel = self.vel + self.gravity * engine.delta()
+        gravity = (self.gravity.elementwise() * self.gravity_multiplier if
+                   pygame.key.get_pressed()[pygame.K_DOWN] else self.gravity)
+        temp_vel = self.vel + gravity * engine.delta()
 
         # Check bottom for collisions
         self.updateBoundingPoints()
@@ -557,8 +568,10 @@ class Player(engine.TickableEntity):
 
         keys = pygame.key.get_pressed()
 
-        self.horizontal += self.acceleration * engine.delta() if (
-                keys[self.left_key] or keys[self.right_key]) else -self.horizontal * 0.1
+        if keys[self.left_key] or keys[self.right_key]:
+            self.horizontal += self.acceleration * engine.delta()
+        else:
+            self.horizontal = engine.math.lerp(self.horizontal, 0, self.controlled_drag * engine.delta())
         self.horizontal = engine.math.clamp(self.horizontal, 0, 1)
 
         if self.allow_movement:
@@ -660,7 +673,7 @@ class GrassyPlatform(Platform):
     def update(self, *args):
         if not self.is_grass_added:
             grass = GrassPatch(
-                self.pos,
+                self.pos + (3, 0),
                 self.size.x
             )
             scene = args[0]
@@ -690,7 +703,8 @@ class LevelTrigger(engine.TickableEntity):
     def __init__(self, pos, level_name, spawn_side):
         self.level_name = level_name
         self.spawn_side = spawn_side
-        self.rect = pygame.Rect(pos, (10, 132))
+        self.rect = pygame.Rect(pos, (10, TILE_SIZE.y * 5))
+        self.rect.midbottom = tile_to_world(pos)
 
     def update(self, *args):
         scene: Level = args[0]
@@ -702,6 +716,9 @@ class LevelTrigger(engine.TickableEntity):
             level = load_json_level(f"gamedata/levels/{self.level_name}.json", self.spawn_side)
             engine.manager.set_state(level)
             scene.cleanup()
+
+        image = engine.get_asset("exit")
+        engine.manager.blit_center(image, self.rect.center)
 
         if engine.debug:
             pygame.draw.rect(engine.get_surface(), (255, 255, 200), self.rect, 1)
@@ -739,6 +756,9 @@ class BouncePad(engine.TickableEntity):
         scene = args[0]
         player = scene.objects["player"]
 
+        if not player:
+            return
+
         if self.animation not in [self.idle_anim, self.bounce_anim]:
             self.animation = self.idle_anim
 
@@ -762,6 +782,23 @@ class BouncePad(engine.TickableEntity):
             surf = engine.get_surface()
             pygame.draw.rect(surf, (255, 255, 200), self.trigger_rect, 1)
             pygame.draw.circle(surf, (0, 0, 255), self.particle_position, 5)
+
+
+class StrongBouncePad(BouncePad):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.bounce_force = -1600
+        self.idle_anim = engine.Animation("assets/strong_bounce_pad/idle")
+        self.bounce_anim = engine.Animation("assets/strong_bounce_pad/bounce", 0.05)
+
+    def addParticle(self, scene, particle_img="yellow_mushroom_particle"):
+        particle = scene.objects["particle manager"].addDefinedParticle(engine.Particle(
+            engine.get_asset(particle_img),
+            self.particle_position,
+            [random.randint(-100, 100), random.randint(-100, 100)]
+        ))
+        particle.rotation_per_second = random.randint(-90, 90)
+        particle.scale_per_second = random.randint(-9, -2)
 
 
 class PushableBouncePad(BouncePad):
@@ -796,6 +833,15 @@ class PushableBouncePad(BouncePad):
 
         self.push_speed = 3500
         self.push_classes = Player, PushablePhysicsObject
+
+    def addParticle(self, scene, particle_img="blue_mushroom_particle"):
+        particle = scene.objects["particle manager"].addDefinedParticle(engine.Particle(
+            engine.get_asset(particle_img),
+            self.particle_position,
+            [random.randint(-100, 100), random.randint(-100, 100)]
+        ))
+        particle.rotation_per_second = random.randint(-90, 90)
+        particle.scale_per_second = random.randint(-9, -2)
 
     def updateBoundingPoints(self):
         self.trigger_rect = pygame.Rect(self.pos, (50, 50))
@@ -874,6 +920,23 @@ class PushableBouncePad(BouncePad):
                              self.check_box_top, 1)
 
 
+class PushableStrongBouncePad(PushableBouncePad):
+    def __init__(self, pos):
+        super().__init__(pos)
+        self.bounce_force = -1600
+        self.idle_anim = engine.Animation("assets/pushable_strong_bounce_pad/idle")
+        self.bounce_anim = engine.Animation("assets/pushable_strong_bounce_pad/bounce", 0.05)
+
+    def addParticle(self, scene, particle_img="purple_mushroom_particle"):
+        particle = scene.objects["particle manager"].addDefinedParticle(engine.Particle(
+            engine.get_asset(particle_img),
+            self.particle_position,
+            [random.randint(-100, 100), random.randint(-100, 100)]
+        ))
+        particle.rotation_per_second = random.randint(-90, 90)
+        particle.scale_per_second = random.randint(-9, -2)
+
+
 class BouncePuff(engine.TickableEntity):
     def __init__(self, pos, stalk_pos):
         self.pos = tile_to_world(pos)
@@ -903,6 +966,10 @@ class BouncePuff(engine.TickableEntity):
     def update(self, *args):
         scene = args[0]
         player = scene.objects["player"]
+
+        if not player:
+            return
+
         player_center = player.rect.center
 
         hitbox = pygame.geometry.Circle(*self.hitbox)
@@ -1039,7 +1106,7 @@ class GrassPatch(engine.TickableEntity):
         self.pos = Vector2(pos)
         self.width = width
 
-        self.interval = 3 if engine.settings.getConfig().getboolean("graphics", "fancy_grass") else 4
+        self.interval = 5  # 3 if engine.settings.getConfig().getboolean("graphics", "fancy_grass") else 4
 
         self.grass = []
 
@@ -1108,8 +1175,7 @@ class Grass(engine.TickableEntity):
         surface = engine.get_surface()
         points = [self.pos - (self.width, 0), self.pos + (self.width, 0), grass_tip]
 
-        pygame.draw.polygon(surface, self.colour, points)
-        pygame.draw.lines(surface, self.colour, False, points, 3)
+        pygame.draw.polygon(surface, self.colour, points, width=3)
 
         if engine.settings.getConfig().getboolean("graphics", "fancy_grass"):
             for p in points:
@@ -1291,7 +1357,11 @@ class Collectible(engine.TickableEntity):
 
 class Sprite(engine.Sprite):
     def __init__(self, image, pos=(0, 0)):
-        super().__init__(image, tile_to_world(pos))
+        _target_pos = tile_to_world(pos)
+        _image: pygame.Surface = engine.get_asset(image)
+        _target_pos.x += _image.get_width() // 2
+        _target_pos.y -= _image.get_height()
+        super().__init__(image, _target_pos)
 
 
 class SaveData:
@@ -1426,6 +1496,8 @@ def load_json_level(path, spawn_side="default"):
         physics_objects.append(entity)
 
     level = Level(engine.manager)
+    level.position = level_data["position"]
+
     for i, (k, v) in enumerate(objects.items()):
         level.add_object(k, v)
     for o in physics_objects:
@@ -1435,6 +1507,7 @@ def load_json_level(path, spawn_side="default"):
     for i, (k, o) in enumerate(objects.items()):
         level.add_phys_object(k, o)
 
+    level.spawn_positions = spawn_positions
     level.addPlayer(1, spawn_positions[spawn_side])
 
     for e in late_entities:
@@ -1519,4 +1592,5 @@ if __name__ == "__main__":
     pygame.mixer_music.set_volume(engine.settings.getConfig().getfloat("volume", "music") / 100)
     pygame.mixer_music.load("assets/moth_camiidae.mp3")
     pygame.mixer_music.play(-1)
+    pygame.display.set_icon(pygame.image.load("assets/toe/idle/idle1.png"))
     engine.run(MainMenu(engine.manager), TITLE, debug_=("debug" in sys.argv))

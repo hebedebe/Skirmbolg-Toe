@@ -13,7 +13,7 @@ NAME = "Cicada"
 
 monitor = get_monitors()[0]
 threads = []
-manager = Manager("Loading...", monitor.width, monitor.height, fps=400, flags=pygame.SRCALPHA)
+manager = Manager("Loading...", monitor.width, monitor.height, fps=1000, flags=pygame.SRCALPHA)
 print(f"Initialised {colorama.Fore.LIGHTGREEN_EX + NAME + colorama.Fore.RESET} "
       f"v{VERSION}")
 

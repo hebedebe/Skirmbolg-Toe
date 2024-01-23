@@ -1,34 +1,34 @@
 todo
- - dynamic vines
+ - IK spider enemy
+ - dynamic vines (scary task)
  - switch all drawing to the draw function and thread the update function
  - improve collision detection
+ - improve player jump (faster falling, custom jump curve)
  - make player particles match the colour of the surface they're standing on
  - add particles for landing
- - fix inconsistent drag with framerate changes / low fps
- - switch single typed lists to arrays (from the array module)
- - make light function use light_rect if available and improve player light_rect
- - switch lights function to the visibility polygons algorithm (https://www.redblobgames.com/articles/visibility/)
  - fix dynamic water bugging and crashing on low framerates
- - fix pygame_gui mouse position scaling
+ - fix pygame_gui mouse position scaling (half done)
  - fix pyinstaller exe compiling
+ - abstract particle adding
  - decals
  - more levels
  - npcs
  - dialogue system
  - level editor
- - automatic serialization
+ - automatic child object serialization on save
  - fix bounce puffs animation flickering
  - change bounce puffs art/head animation
  - add actual settings to the settings menu
  - water sounds and fx (splash and moving in water, scrolling perlin texture using shaders)
  - optimise grass (do collision detection in chunks?)
- - switch to opengl for image drawing
 
 do eventually
  - improve tile batching
  - input buffering
  - pregenerate pitched audio files when loading rather than at runtime
  - snail shells slime trail (maybe)
+ - make light function use light_rect if available and improve player light_rect
+ - switch lights function to the visibility polygons algorithm (https://www.redblobgames.com/articles/visibility/)
 
 kate requests
  - fireflies (in level and on main menu)
