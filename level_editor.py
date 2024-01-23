@@ -16,6 +16,25 @@ class Editor(engine.State):
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.add_object("platform creator", PlatformCreator(pygame.mouse.get_pos()))
             print("added platform creator")
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                level_name = input("Level name (x_y): ")
+                level_data = {
+                    "name": level_name,
+                    "level": [],
+                    "level_late": [],
+                    "spawn_positions": {
+                        "default": [500, 500]
+                    }
+                }
+                path = f"gamedata/levels/{level_name}.json"
+                for i, (k, o) in enumerate(self.objects):
+                    name = o.__name__
+
+
+
+def class_to_string():
+    return
 
 
 class PlatformCreator(engine.TickableEntity):

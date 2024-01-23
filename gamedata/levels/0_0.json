@@ -1,0 +1,61 @@
+{
+  "layout": [
+    "############################################################",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                        PPPPPPPPPPPPPP    #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                        ##############    #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                          #",
+    "#                                                      #####",
+    "#                                                      #####",
+    "#                                                      #####",
+    "#GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG#####"
+  ],
+  "entities": [
+    {
+      "type": "BouncePad",
+      "name": "mushroom",
+      "args": [
+        [57.5, 28.5]
+      ]
+    },
+    {
+      "type": "Sprite",
+      "name": "background mushroom",
+      "args": [
+        "background_mushroom_1",
+        [30, 25]
+      ]
+    }
+  ],
+  "late_entities": [],
+  "physics_entities": [],
+  "late_physics_entities": [],
+  "spawn_positions": {
+    "default": [29, 33]
+  }
+}

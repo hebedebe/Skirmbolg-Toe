@@ -29,6 +29,7 @@ class State:
     def add_phys_object(self, name, obj):
         self.objects[name] = obj
         self.physics_objects.append(obj)
+        # self.physics_objects.add(obj)
 
     def on_focus(self):
         ...
@@ -140,9 +141,10 @@ class DisplayEngine:
         self.clock = pygame.time.Clock()
         self.running = False
         self.delta = 0
+        self.delta_counter = engine.Text((20, 50), "Delta: error", 24)
         self.time = 0
         self.fps = fps
-        self.fps_counter = engine.Text((0, 20), "FPS: error", 24)
+        self.fps_counter = engine.Text((20, 20), "FPS: error", 24)
         self.manager = manager
 
         self.state_machine = StateMachine(manager)
@@ -187,7 +189,9 @@ class DisplayEngine:
 
             if engine.debug:
                 self.fps_counter.text = f"FPS: {int(self.clock.get_fps())}"
+                self.delta_counter.text = f"Delta: {self.delta}"
                 self.fps_counter.update()
+                self.delta_counter.update()
 
             frame_tex = None
             if self.do_display_scaling:
@@ -460,7 +464,7 @@ class SliceSprite(pygame.sprite.Sprite):  # Stolen from the internet
         since updating properties of the rect would not be trigger _regenerate_slices.
 
         Args:
-            image (pygame.Surface): the original surface to be sliced
+            image (pygame.Surface): the original surface to be sliced.
             slicing (tuple(left, right, top, bottom): the 9-slicing margins relative to image edges
         """
         pygame.sprite.Sprite.__init__(self)

@@ -23,12 +23,6 @@ try:
 except ModuleNotFoundError:
     print("Not a pyinstaller program")
 
-TITLE = "Skirmbolg & Toe"
-
-BACKGROUND_COLOUR = (24, 20, 37)
-
-cached_scene = None
-
 
 class MainMenu(engine.State):
     def on_init(self, *args):
@@ -209,11 +203,11 @@ class CharacterSelect(engine.State):
         if event.type == gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.objects["skirmbolg button"]:
                 engine.manager.globals["player type"] = 0
-                start_level = load_json_level("gamedata/levels/level/10_10.json")
+                start_level = load_json_level("gamedata/levels/0_0.json")
                 self.manager.set_state(start_level)
             elif event.ui_element == self.objects["toe button"]:
                 engine.manager.globals["player type"] = 1
-                start_level = load_json_level("gamedata/levels/level/10_10.json")
+                start_level = load_json_level("gamedata/levels/0_0.json")
                 self.manager.set_state(start_level)
             elif event.ui_element == self.objects["back button"]:
                 self.manager.set_state(MainMenu(self.manager))
@@ -299,7 +293,7 @@ class Level(engine.State):
         self.add_object("background", engine.Sprite("background1", (0, 0)))
         self.add_object("particle manager", engine.ParticleManager())
 
-    def addPlayer(self, selection, pos=(500, 500)):
+    def addPlayer(self, selection, pos=(30, 15)):
         match selection:
             case 0:  # Skirmbolg
                 player = Player(pos)
@@ -327,12 +321,12 @@ class Level(engine.State):
 
 class PhysicsObject(engine.TickableEntity):
     def __init__(self, pos, size, animation=None, animation_pos=Vector2()):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
         self.vel = Vector2()
-        self.size = Vector2(size)
+        self.size = tile_to_world(size)
 
         self.animation = engine.Animation(*animation) if type(animation) is list else engine.Animation(animation)
-        self.animation_pos = Vector2(animation_pos)
+        self.animation_pos = tile_to_world(animation_pos)
 
         self.hitbox_depth = 4
 
@@ -443,7 +437,7 @@ class PushablePhysicsObject(PhysicsObject):
 
 class Player(engine.TickableEntity):
     def __init__(self, pos, size=(52, 113)):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
         self.vel = Vector2()
         self.controlled_vel = Vector2()
         self.direction = 0
@@ -513,8 +507,8 @@ class Player(engine.TickableEntity):
         self.touching_left = False
 
         # Apply drag
-        self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
-        # self.vel = self.vel.lerp(Vector2(), self.drag * engine.delta())
+        # self.vel.x = engine.math.lerp(self.vel.x, 0, self.drag * engine.delta())
+        self.vel.x *= self.drag * engine.delta()
 
         # Calculate velocity for collision checks
         temp_vel = self.vel + self.gravity * engine.delta()
@@ -646,6 +640,9 @@ class Platform(engine.TickableEntity):
         self.draw_rect = self.rect
         self.image = image
 
+    def __str__(self):
+        return f"pos: {self.pos}, size: {self.size}"
+
     def update(self, *args):
         if self.draw:
             pygame.draw.rect(engine.get_surface(), (24, 20, 37), self.draw_rect)
@@ -701,8 +698,8 @@ class LevelTrigger(engine.TickableEntity):
             return
         player_rect = scene.objects["player"].rect
         if self.rect.colliderect(player_rect):
-            pack_json_level(scene)
-            level = load_json_level(f"gamedata/levels/level/{self.level_name}.json", self.spawn_side)
+            save_level(scene)
+            level = load_json_level(f"gamedata/levels/{self.level_name}.json", self.spawn_side)
             engine.manager.set_state(level)
             scene.cleanup()
 
@@ -712,7 +709,7 @@ class LevelTrigger(engine.TickableEntity):
 
 class BouncePad(engine.TickableEntity):
     def __init__(self, pos):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
         self.trigger_rect = pygame.Rect(self.pos, (50, 50))
 
         self.particle_position = self.pos + (25, 15)
@@ -802,7 +799,7 @@ class PushableBouncePad(BouncePad):
 
     def updateBoundingPoints(self):
         self.trigger_rect = pygame.Rect(self.pos, (50, 50))
-        self.particle_position = add_tuples(self.pos, (25, 15))
+        self.particle_position = self.pos + (25, 15)
         self.rect = pygame.Rect(self.pos + self.hitbox_offset, (self.size.x, self.size.y))
         self.check_box_bottom = pygame.Rect(self.pos + self.hitbox_offset + (0, self.size.y),
                                             (self.size.x, self.hitbox_depth))
@@ -879,8 +876,8 @@ class PushableBouncePad(BouncePad):
 
 class BouncePuff(engine.TickableEntity):
     def __init__(self, pos, stalk_pos):
-        self.pos = Vector2(pos)
-        self.stalk_pos = Vector2(stalk_pos)
+        self.pos = tile_to_world(pos)
+        self.stalk_pos = tile_to_world(stalk_pos)
 
         self.radius = 26
         self.hitbox = (self.pos, self.radius)  # Not really a "box" but close enough probably
@@ -960,7 +957,7 @@ class BouncePuff(engine.TickableEntity):
 
 class Npc(engine.TickableEntity):
     def __init__(self, path, pos):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
 
         with open(path) as file:
             data = json.loads(file.read())
@@ -1070,7 +1067,7 @@ class Grass(engine.TickableEntity):
             random.uniform(0.05, 0.09),
             random.uniform(0.1, 0.3)
         )
-        self.wind_strength = random.randint(7, 12)
+        self.wind_strength = random.randint(2, 12)
 
         self.width = random.randint(1, 2)
         self.height = random.randint(5, 20)
@@ -1123,8 +1120,16 @@ class Grass(engine.TickableEntity):
 
 
 class Water(engine.TickableEntity):
-    def __init__(self, anchors):
-        self.anchors = [Vector2(anchor) for anchor in anchors]
+    def __init__(self, pos, size):
+        self.pos = tile_to_world(pos)
+        self.size = tile_to_world(size)
+
+        self.anchors = [
+            self.pos,
+            self.pos + (self.size.x, 0),
+            self.pos + self.size,
+            self.pos + (0, self.size.y)
+        ]
 
         self.influence = 2
 
@@ -1190,7 +1195,7 @@ class Water(engine.TickableEntity):
 
 class Light(engine.TickableEntity):
     def __init__(self, pos, radius):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
         self.radius = radius
         self.angle_step_size = 0  # Angle between each ray (in degrees)
         match engine.settings.getConfig().get("graphics", "light_quality"):
@@ -1239,7 +1244,7 @@ class Light(engine.TickableEntity):
 
 class Collectible(engine.TickableEntity):
     def __init__(self, pos):
-        self.pos = Vector2(pos)
+        self.pos = tile_to_world(pos)
         self.animation = engine.Animation("assets/collectible/idle")
         self.trigger_rect = pygame.Rect(self.pos, (50, 50))
         self.enabled = True
@@ -1284,6 +1289,11 @@ class Collectible(engine.TickableEntity):
             pygame.draw.rect(surface, (255, 255, 200), self.trigger_rect, 1)
 
 
+class Sprite(engine.Sprite):
+    def __init__(self, image, pos=(0, 0)):
+        super().__init__(image, tile_to_world(pos))
+
+
 class SaveData:
     def __init__(self):
         self.global_save = {
@@ -1291,7 +1301,7 @@ class SaveData:
         }
         self.player_saves = [
             {
-                "room": "10_10"
+                "room": "0_0"
             } for _ in range(2)
         ]
 
@@ -1300,6 +1310,20 @@ class SaveData:
         with open(path, "wb") as file:
             file.write(data)
         print("Game saved!")
+
+
+class Batch:
+    def __init__(self, batch_type, pos, size):
+        self.type = batch_type
+        self.pos = Vector2(pos)
+        self.size = Vector2(size)
+
+    def __str__(self):
+        return f"type: {self.type.__name__}, pos: {self.pos}, size:{self.size}"
+
+    def convert(self):
+        result = self.type(self.pos.elementwise() * TILE_SIZE, self.size.elementwise() * TILE_SIZE)
+        return result
 
 
 def addParticle(position, scene, particle_img="ground_particle"):
@@ -1312,15 +1336,35 @@ def addParticle(position, scene, particle_img="ground_particle"):
     particle.scale_per_second = random.randint(-9, -2)
 
 
-def add_tuples(t1: tuple, t2: tuple):
-    return Vector2(t1[0] + t2[0], t1[1] + t2[1])
-
-
 def check_collision(rect, physics_objects):
     for o in physics_objects:
         if rect.colliderect(o.rect):
             return o
-    return None
+    # return None
+
+
+def unpack_level_layout(level):
+    batches = []
+
+    for y, row in enumerate(level):
+        temp_batches = [Batch(None, (0, 0), (0, 0))]
+        for x, tile in enumerate(row):
+            tile_type = LEVEL_IDS[tile]
+            if temp_batches[-1].type != tile_type:
+                temp_batches.append(Batch(tile_type, (x, y), (1, 1)))
+            else:
+                temp_batches[-1].size.x += 1
+
+        for batch in temp_batches:
+            if batch.type is None:
+                continue
+            batches.append(batch)
+
+    objects = {}
+    for i, batch in enumerate(batches):
+        objects[f"batch_{i}"] = batch.convert()
+
+    return objects
 
 
 def load_json_level(path, spawn_side="default"):
@@ -1345,62 +1389,74 @@ def load_json_level(path, spawn_side="default"):
     else:
         print("Could not find level save data")
 
-    with open(path) as file:
-        level_data = json.load(file)
-        print("Loaded level data")
-    objects = []
-    for o in level_data["level"]:
-        print(f"Found object '{o['name']}' of type '{o['type']}'")
-        o_type = str_to_class(o["type"])
-        for o_ in objects:
-            if o_[0] == o["name"]:
-                print(f"Object with name already exists. Modifying object name.")
-                o["name"] = o["name"] + "_name-duplicated"
-        objects.append([o["name"], o["is_physics"], o_type(*[*o.values()][3:])])
+    try:
+        with open(path) as file:
+            level_data = json.load(file)
+            print("Loaded level data")
+    except FileNotFoundError as e:
+        print("Level file not found")
+        print(e)
+        return
+
+    layout = level_data["layout"]
+    spawn_positions = level_data["spawn_positions"]
+    entities = level_data["entities"]
+    physics_entities = level_data["physics_entities"]
+    late_entities = level_data["late_entities"]
+    late_physics_entities = level_data["late_physics_entities"]
+
+    objects = {}
+    physics_objects = []
+
+    for e in entities:
+        entity_name = e["name"]
+        entity_type = str_to_class(e["type"])
+        args = e["args"]
+
+        entity = entity_type(*args)
+        objects[entity_name] = entity
+
+    for e in physics_entities:
+        entity_name = e["name"]
+        entity_type = str_to_class(e["type"])
+        args = e["args"]
+
+        entity = entity_type(*args)
+        objects[entity_name] = entity
+        physics_objects.append(entity)
 
     level = Level(engine.manager)
-    print("Instanced level class")
-    level.position = level_data["position"]
-    print("Set level position")
-    level.spawn_positions = level_data["spawn_positions"]
-    print("Set level spawn positions")
+    for i, (k, v) in enumerate(objects.items()):
+        level.add_object(k, v)
+    for o in physics_objects:
+        level.physics_objects.append(o)
 
-    for o in objects:
-        if o[1]:
-            level.add_phys_object(o[0], o[2])
-        else:
-            level.add_object(o[0], o[2])
-        print(f"Added object {o}")
+    objects = unpack_level_layout(layout)
+    for i, (k, o) in enumerate(objects.items()):
+        level.add_phys_object(k, o)
 
-    spawn_pos = level.spawn_positions[spawn_side]
+    level.addPlayer(1, spawn_positions[spawn_side])
 
-    print(f"Spawning player at {spawn_pos}")
-    level.addPlayer(engine.manager.globals["player type"], spawn_pos)
+    for e in late_entities:
+        entity_name = e["name"]
+        entity_type = str_to_class(e["type"])
+        args = e["args"]
 
-    if "level_late" in level_data:
-        late_objects = []
+        entity = entity_type(*args)
+        level.add_object(entity_name, entity)
 
-        for o in level_data["level_late"]:
-            print(f"Found late object '{o['name']}' of type '{o['type']}'")
-            o_type = str_to_class(o["type"])
-            for o_ in late_objects:
-                if o_[0] == o["name"]:
-                    print(f"Object with name already exists. Modifying object name.")
-                    o["name"] = o["name"] + "_name-duplicated"
-            late_objects.append([o["name"], o["is_physics"], o_type(*[*o.values()][3:])])
+    for e in late_physics_entities:
+        entity_name = e["name"]
+        entity_type = str_to_class(e["type"])
+        args = e["args"]
 
-        for o in late_objects:
-            if o[1]:
-                level.add_phys_object(o[0], o[2])
-            else:
-                level.add_object(o[0], o[2])
-            print(f"Added late object {o}")
+        entity = entity_type(*args)
+        level.add_phys_object(entity_name, entity)
 
-    print("Level loading complete")
     return level
 
 
-def pack_json_level(level):
+def save_level(level):
     print("Saving level...")
     if not engine.settings.getConfig().getboolean("debug", "do_saving"):
         print("Saving is disabled.")
@@ -1440,6 +1496,21 @@ def str_to_class(class_name):
     return getattr(sys.modules[__name__], class_name)
 
 
+def tile_to_world(tile_position):
+    return tile_position * TILE_SIZE.elementwise()
+
+
+TITLE = "Skirmbolg & Toe"
+BACKGROUND_COLOUR = (24, 20, 37)
+TILE_SIZE = Vector2(32, 32)
+LEVEL_IDS = {
+    "#": Platform,
+    "P": PassablePlatform,
+    "G": GrassyPlatform,
+    " ": None
+}
+
+cached_scene = None
 save_data = load_save()
 
 if __name__ == "__main__":
