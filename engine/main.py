@@ -50,6 +50,9 @@ class State:
     def on_draw(self, surface):
         surface.fill(self.background_colour)
 
+    def on_debug_draw(self, surface):
+        ...
+
     def on_event(self, event):
         ...
 
@@ -184,6 +187,7 @@ class DisplayEngine:
                     self.manager.ui_manager.process_events(event)
 
             state.on_draw(self.surface)
+            state.on_debug_draw(self.surface)
             state.on_update()
             self.manager.ui_manager.update(self.delta)
             self.manager.ui_manager.draw_ui(self.surface)

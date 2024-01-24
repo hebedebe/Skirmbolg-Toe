@@ -1174,7 +1174,7 @@ class Vine(engine.TickableEntity):
                 spring.vel.x += (player.vel + player.controlled_vel).x * self.player_influence * engine.delta()
 
             spring.vel.x -= (math.sin(engine.manager.engine.time) *
-                            self.wind_influence * engine.delta())
+                             self.wind_influence * engine.delta())
 
             spring.update()
 
@@ -1199,8 +1199,9 @@ class VinePatch(engine.TickableEntity):
         self.vine_spacing = 12
         self.num_vines = int(self.width // self.vine_spacing)
 
-        self.vines = [Vine(self.pos + (x * self.vine_spacing + random.randint(-3, 3), 0), random.randint(*self.length_range),
-                           True) for x in range(self.num_vines)]
+        self.vines = [
+            Vine(self.pos + (x * self.vine_spacing + random.randint(-3, 3), 0), random.randint(*self.length_range),
+                 True) for x in range(self.num_vines)]
 
     def update(self, *args):
         for vine in self.vines:
@@ -1670,9 +1671,10 @@ def load_save(path="gamedata/savedata/save.pickle"):
 
 
 def str_to_class(class_name):
-    if type(class_name) == list:
-        return getattr(sys.modules[class_name[0]], class_name[1])
-    return getattr(sys.modules[__name__], class_name)
+    return ENTITY_IDS[class_name]
+    # if type(class_name) == list:
+    #     return getattr(sys.modules[class_name[0]], class_name[1])
+    # return getattr(sys.modules[__name__], class_name)
 
 
 def tile_to_world(tile_position):
@@ -1688,6 +1690,14 @@ LEVEL_IDS = {
     "V": VinyPlatform,
     "G": GrassyPlatform,
     " ": None
+}
+ENTITY_IDS = {
+    "BouncePad": BouncePad,
+    "BouncePuff": BouncePuff,
+    "Water": Water,
+    "Collectible": Collectible,
+    "LevelTrigger": LevelTrigger,
+    "VinePatch": VinePatch
 }
 
 cached_scene = None
