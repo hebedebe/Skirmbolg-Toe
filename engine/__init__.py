@@ -25,6 +25,7 @@ VEC2_UP = pygame.Vector2(0, -1)
 VEC2_DOWN = pygame.Vector2(0, 1)
 VEC2_LEFT = pygame.Vector2(-1, 0)
 VEC2_RIGHT = pygame.Vector2(1, 0)
+VEC2_ZERO = pygame.Vector2(0, 0)
 
 
 def add_thread(thread):

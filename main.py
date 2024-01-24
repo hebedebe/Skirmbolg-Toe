@@ -313,6 +313,11 @@ class Level(engine.State):
                 player.fall_anim = engine.Animation("assets/toe/fall")
                 self.add_phys_object("player", player)
 
+    def on_update(self):
+        global wind
+        super().on_update()
+        wind = math.sin(engine.manager.engine.time)
+
     def on_event(self, event):
         global cached_scene
         if event.type == pygame.KEYDOWN:
@@ -1107,7 +1112,10 @@ class Npc(engine.TickableEntity):
 
 
 class Spring:
-    def __init__(self, pos, strength=20, dampening=0.2):  # Use hooke's law to calculate force (F = Kx)
+    GRAVITY_VECTOR = pygame.Vector2(0, 0)
+    DEBUG_COLOR = (255, 255, 200)
+
+    def __init__(self, pos, strength=20, dampening=0.2):
         self.pos = Vector2(pos)
         self.target_pos = Vector2(pos)
         self.vel = Vector2()
@@ -1115,24 +1123,25 @@ class Spring:
         self.strength = strength
         self.dampening = dampening
 
-        self.gravity = Vector2(0, 0)
+        self.gravity = self.GRAVITY_VECTOR
 
     def update_vel(self, target_pos: pygame.Vector2 = None):
-        if target_pos is None:
-            target_pos = self.target_pos
+        target_pos = target_pos or self.target_pos
         distance = target_pos - self.pos
         force = distance * self.strength
-        force_delta = force * engine.delta()
+        delta_time = engine.delta()
 
-        self.vel = self.vel + force_delta + (self.gravity * engine.delta())
-        self.vel = self.vel.lerp(Vector2(0, 0), pygame.math.clamp(self.dampening * engine.delta(), 0, 1))
+        self.vel += (force + self.gravity) * delta_time
+        self.vel = self.vel.lerp(Vector2(0, 0), pygame.math.clamp(self.dampening * delta_time, 0, 1))
 
     def update(self):
-        self.pos = self.pos + self.vel * engine.delta()
+        vel = self.vel  # Local variable
+        delta_time = engine.delta()
+        self.pos += vel * delta_time
 
     def draw_debug(self):
         surface = engine.get_surface()
-        pygame.draw.circle(surface, (255, 255, 200), self.pos, 5, 1)
+        pygame.draw.circle(surface, self.DEBUG_COLOR, self.pos, 5, 1)
 
 
 class RotationSpring:
@@ -1182,6 +1191,7 @@ class Vine(engine.TickableEntity):
         self.points = []
 
     def update(self, *args):
+        global wind
         scene = args[0]
         player = scene.objects["player"]
 
@@ -1205,8 +1215,7 @@ class Vine(engine.TickableEntity):
             if player.rect.collidepoint(spring.pos):
                 spring.vel.x += (player.vel + player.controlled_vel).x * self.player_influence * engine.delta()
 
-            spring.vel.x -= (math.sin(engine.manager.engine.time) *
-                             self.wind_influence * engine.delta())
+            spring.vel.x -= (wind * self.wind_influence * engine.delta())
 
             spring.update()
 
@@ -1235,8 +1244,9 @@ class VinePatch(engine.TickableEntity):
         self.vines = set()
 
     def generateVines(self):
-        self.vines = set(Vine(self.pos + (x * self.vine_spacing + random.randint(0, 3), 0), random.randint(*self.length_range),
-             True) for x in range(self.num_vines))
+        self.vines = set(
+            Vine(self.pos + (x * self.vine_spacing + random.randint(0, 3), 0), random.randint(*self.length_range),
+                 True) for x in range(self.num_vines))
 
     def update(self, *args):
         if not self.vines:
@@ -1291,19 +1301,10 @@ class Grass(engine.TickableEntity):
         self.pos = Vector2(pos)
         self.pos.x += random.randint(-1, 1)
 
-        self.influence = Vector2(
-            random.uniform(0.05, 0.09),
-            random.uniform(0.1, 0.3)
-        )
-        self.wind_strength = random.randint(2, 12)
+        self.randomize_attributes()
 
-        self.width = random.randint(1, 2)
-        self.height = random.randint(5, 20)
         self.trigger_rect = pygame.Rect(0, 0, self.width, self.height)
         self.trigger_rect.midbottom = self.pos
-
-        self.damp = random.uniform(0.7, 1.5)
-        self.strength = random.uniform(0.7, 1.5)
 
         self.rot_spring = RotationSpring(0, 0, self.strength, self.damp)
 
@@ -1316,15 +1317,27 @@ class Grass(engine.TickableEntity):
         self.grass_tip = Vector2()
         self.points = []
 
+    def randomize_attributes(self):
+        self.influence = Vector2(
+            random.uniform(0.05, 0.09),
+            random.uniform(0.1, 0.3)
+        )
+        self.wind_strength = random.randint(2, 12)
+        self.width = random.randint(1, 2)
+        self.height = random.randint(5, 20)
+        self.damp = random.uniform(0.7, 1.5)
+        self.strength = random.uniform(0.7, 1.5)
+
     def update(self, *args):
+        global wind
+
         scene = args[0]
-        player = scene.objects["player"]
+        player = scene.objects.get("player")
 
         if not player:
             return
 
-        self.rot_spring.angular_velocity -= (math.sin(engine.manager.engine.time) *
-                                             self.wind_strength * engine.delta())
+        self.rot_spring.angular_velocity -= (wind * self.wind_strength * engine.delta())
 
         if self.trigger_rect.colliderect(player.rect):
             self.rot_spring.angular_velocity += ((player.vel.x + player.controlled_vel.x) *
@@ -1334,23 +1347,25 @@ class Grass(engine.TickableEntity):
 
         self.rot_spring.update()
 
-        self.grass_tip = self.pos + engine.VEC2_UP.rotate(self.rot_spring.rotation) * self.height
+        up_vector = engine.VEC2_UP
+        self.grass_tip = self.pos + up_vector.rotate(self.rot_spring.rotation) * self.height
 
-        surface = engine.get_surface()
         self.points = [self.pos - (self.width, 0), self.pos + (self.width, 0), self.grass_tip]
 
     def on_draw(self, *args):
         if not self.points:
             return
 
-        pygame.draw.polygon(engine.get_surface(), self.colour, self.points, width=3)
+        surface = engine.get_surface()
+        pygame.draw.polygon(surface, self.colour, self.points, width=3)
 
         if engine.settings.getConfig().getboolean("graphics", "fancy_grass"):
             for p in self.points:
-                pygame.draw.circle(engine.get_surface(), self.colour, p, 1.5)
+                pygame.draw.circle(surface, self.colour, p, 1.5)
 
     def on_draw_debug(self, *args):
-        pygame.draw.line(engine.get_surface(), (0, 0, 255), self.pos, self.grass_tip, 1)
+        surface = engine.get_surface()
+        pygame.draw.line(surface, (0, 0, 255), self.pos, self.grass_tip, 1)
 
 
 class Water(engine.TickableEntity):
@@ -1384,7 +1399,7 @@ class Water(engine.TickableEntity):
     def update(self, *args):
         scene = args[0]
 
-        player = scene.objects["player"]
+        player = scene.objects.get("player")
 
         if not player:
             return
@@ -1396,20 +1411,11 @@ class Water(engine.TickableEntity):
             if col_circle.colliderect(player.rect):
                 s.vel.y += player.vel.y * self.influence * engine.delta()
 
-            if i > 0:
-                pos = Vector2(
-                    s.pos.x,
-                    self.springs[i - 1].pos.y
-                )
-                s.update_vel(pos)
-                s.update_vel(pos)
-            if i < len(self.springs) - 1:
-                pos = Vector2(
-                    s.pos.x,
-                    self.springs[i + 1].pos.y
-                )
-                s.update_vel(pos)
-                s.update_vel(pos)
+            pos_up = Vector2(s.pos.x, self.springs[i - 1].pos.y) if i > 0 else None
+            pos_down = Vector2(s.pos.x, self.springs[i + 1].pos.y) if i < len(self.springs) - 1 else None
+
+            s.update_vel(pos_up)
+            s.update_vel(pos_down)
             s.update_vel()
             s.update()
             self.points.append(s.pos)
@@ -1767,6 +1773,7 @@ ENTITY_IDS = {
 
 cached_scene = None
 save_data = load_save()
+wind = 0
 
 if __name__ == "__main__":
     settings.checkAndMakeSettings()

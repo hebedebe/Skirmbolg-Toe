@@ -5,17 +5,11 @@ from array import array
 from screeninfo import get_monitors
 from glob import glob
 import queue
-from typing import List
 
 import engine
 import engine.settings
 from engine.assetloader import Assets
 import engine.util
-
-
-# Add a helper function for blitting
-def blit_surface(surface, pos):
-    engine.manager.engine.surface.blit(surface, pos + engine.manager.camera)
 
 
 class State:
@@ -24,6 +18,7 @@ class State:
         self.objects = {}
         self.physics_objects = []
         self.background_colour = (0, 0, 0)
+
         self.buffered_objects = {}
 
     def add_object(self, name, obj):
@@ -35,6 +30,7 @@ class State:
     def add_phys_object(self, name, obj):
         self.objects[name] = obj
         self.physics_objects.append(obj)
+        # self.physics_objects.add(obj)
 
     def on_focus(self):
         ...
@@ -44,33 +40,44 @@ class State:
 
     def cleanup(self):
         for o in self.objects.values():
-            if hasattr(o, 'kill'):
-                o.kill()
+            try:
+                o.kill()  # If the object is a ui element setting it to None will not remove it
+            except AttributeError:
+                continue
 
     def on_init(self, *args):
         ...
 
     def on_draw(self, surface):
         surface.fill(self.background_colour)
-        for o in self.objects.values():
-            if isinstance(o, engine.TickableEntity) and o.enabled:
-                o.on_draw()
+        if self.objects:
+            for o in self.objects.values():
+                if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
+                    o.on_draw()
 
     def on_debug_draw(self, surface):
-        for o in self.objects.values():
-            if isinstance(o, engine.TickableEntity) and o.enabled:
-                o.on_draw_debug()
+        if self.objects:
+            for o in self.objects.values():
+                if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
+                    o.on_draw_debug()
 
     def on_event(self, event):
         ...
 
     def on_update(self):
-        for k, v in self.buffered_objects.items():
+        for i, (k, v) in enumerate(self.buffered_objects.items()):
             self.add_object(k, v)
 
-        for o in self.objects.values():
-            if isinstance(o, engine.TickableEntity) and o.enabled:
-                o.update(self)
+        if self.objects:
+            for o in self.objects.values():
+                if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
+                    o.update(self)
 
     def on_quit(self):
         self.cleanup()
@@ -227,7 +234,6 @@ class StateControl:
             return self.state(manager, *self.args)
 
         return self.state
-
 
 
 # Store what to be share across all states
@@ -610,6 +616,7 @@ class SliceSprite(pygame.sprite.Sprite):  # Stolen from the internet
             self._generate_slices()
             self._regenerate_slices = False
         surface.blit(self._sliced_image, (x, y))
+
 
 def linecast(start_pos, direction, distance, collidable_objects, distance_threshold=1):
     direction.normalize_ip()
