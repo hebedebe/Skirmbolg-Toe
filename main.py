@@ -683,6 +683,26 @@ class GrassyPlatform(Platform):
         super().update(*args)
 
 
+class VinyPlatform(Platform):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.are_vines_added = False
+
+    def update(self, *args):
+        if not self.are_vines_added:
+            vine = VinePatch(
+                self.pos + (0, self.size.y),
+                self.size,
+                (50, 80),
+                True
+            )
+            scene = args[0]
+            scene.add_buffered_object(f"{self}_vine", vine)
+            self.are_vines_added = True
+
+        super().update(*args)
+
+
 class PassablePlatform(Platform):
     def __init__(self, *args):
         super().__init__(*args)
@@ -1099,6 +1119,92 @@ class RotationSpring:
         self.angular_velocity = engine.math.lerp(self.angular_velocity, 0, self.dampening * engine.delta())
 
         self.rotation += self.angular_velocity
+
+
+class Vine(engine.TickableEntity):
+    def __init__(self, pos, length, use_world_pos=False):
+        self.pos = pos if use_world_pos else tile_to_world(pos)
+        self.length = length
+
+        self.segment_distance = 10
+        self.num_segments = self.length // self.segment_distance
+        self.spring_strength = 40
+        self.spring_dampening = 1
+        self.spring_gravity = Vector2(0, 100)
+
+        self.player_influence = random.uniform(1, 5)
+        self.wind_influence = random.uniform(-1, 4)
+
+        self.springs = [Spring(Vector2(self.pos.x, self.pos.y + self.segment_distance * y),
+                               self.spring_strength,
+                               self.spring_dampening)
+                        for y in range(self.num_segments)]
+
+        for spring in self.springs:
+            spring.gravity = self.spring_gravity
+
+        self.colour = random.choice((
+            (25, 60, 62),
+            (38, 92, 66),
+            (62, 137, 72)
+        ))
+
+    def update(self, *args):
+        scene = args[0]
+        player = scene.objects["player"]
+
+        if not player:
+            return
+
+        points = [self.pos]
+
+        for i, spring in enumerate(self.springs):
+            target_pos_above = self.pos
+
+            if i > 0:
+                target_pos_above = self.springs[i - 1].pos
+
+            spring.update_vel(target_pos_above)
+
+            if i < len(self.springs) - 1:
+                target_pos_below = self.springs[i + 1].pos
+                spring.update_vel(target_pos_below)
+
+            if player.rect.collidepoint(spring.pos):
+                spring.vel.x += (player.vel + player.controlled_vel).x * self.player_influence * engine.delta()
+
+            spring.vel.x -= (math.sin(engine.manager.engine.time) *
+                            self.wind_influence * engine.delta())
+
+            spring.update()
+
+            points.append(spring.pos)
+
+        surface = engine.get_surface()
+
+        pygame.draw.lines(surface, self.colour, False, points, 6)
+        pygame.draw.circle(surface, self.colour, points[-1] + (1, 0), 3)
+
+        if engine.debug:
+            pygame.draw.lines(surface, (0, 0, 255), False, points, 1)
+
+
+class VinePatch(engine.TickableEntity):
+    def __init__(self, pos, size, length_range, use_world_pos=False):
+        self.pos = pos if use_world_pos else tile_to_world(pos)
+        self.width = (size if use_world_pos else tile_to_world(size)).x
+
+        self.length_range = length_range
+
+        self.vine_spacing = 12
+        self.num_vines = int(self.width // self.vine_spacing)
+
+        self.vines = [Vine(self.pos + (x * self.vine_spacing + random.randint(-3, 3), 0), random.randint(*self.length_range),
+                           True) for x in range(self.num_vines)]
+
+    def update(self, *args):
+        for vine in self.vines:
+            vine.update(*args)
 
 
 class GrassPatch(engine.TickableEntity):
@@ -1579,6 +1685,7 @@ TILE_SIZE = Vector2(32, 32)
 LEVEL_IDS = {
     "#": Platform,
     "P": PassablePlatform,
+    "V": VinyPlatform,
     "G": GrassyPlatform,
     " ": None
 }
