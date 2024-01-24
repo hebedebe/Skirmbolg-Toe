@@ -1778,8 +1778,7 @@ wind = 0
 if __name__ == "__main__":
     settings.checkAndMakeSettings()
     engine.manager.make_fullscreen()
-    pygame.mixer_music.set_volume(engine.settings.getConfig().getfloat("volume", "music") / 100)
-    pygame.mixer_music.load("assets/moth_camiidae.mp3")
-    pygame.mixer_music.play(-1)
+    engine.manager.music.add_track("assets/moth_camiidae.mp3")
+    engine.manager.music.add_track("assets/butterfly_camiidae.mp3")
     pygame.display.set_icon(pygame.image.load("assets/toe/idle/idle1.png"))
     engine.run(MainMenu(engine.manager), TITLE, debug_=("debug" in sys.argv))

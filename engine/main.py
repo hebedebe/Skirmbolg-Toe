@@ -172,6 +172,8 @@ class DisplayEngine:
         while self.running:
             state = self.state_machine()
 
+            engine.manager.music.update()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     state.on_quit()
@@ -229,6 +231,48 @@ class StateControl:
         return self.state
 
 
+class MusicManager:
+    def __init__(self):
+        pygame.mixer.init()
+        self.playlist = []
+        self.current_track_index = 0
+
+    def add_track(self, track_path):
+        self.playlist.append(track_path)
+
+    def play(self):
+        if self.playlist:
+            pygame.mixer.music.load(self.playlist[self.current_track_index])
+            pygame.mixer.music.set_volume(engine.settings.getConfig().getfloat("volume", "music"))
+            pygame.mixer.music.play()
+
+    @staticmethod
+    def stop():
+        pygame.mixer.music.stop()
+
+    @staticmethod
+    def pause():
+        pygame.mixer.music.pause()
+
+    @staticmethod
+    def unpause():
+        pygame.mixer.music.unpause()
+
+    def next_track(self):
+        if self.playlist:
+            self.current_track_index = (self.current_track_index + 1) % len(self.playlist)
+            self.play()
+
+    def previous_track(self):
+        if self.playlist:
+            self.current_track_index = (self.current_track_index - 1) % len(self.playlist)
+            self.play()
+
+    def update(self):
+        if not pygame.mixer.music.get_busy():
+            # If the current track has finished, play the next one
+            self.next_track()
+
 
 # Store what to be share across all states
 class Manager:
@@ -239,6 +283,7 @@ class Manager:
         self.camera = pygame.Vector2()
         self.assets = Assets()
         self.globals = {}
+        self.music = MusicManager()
 
     def reloadAssets(self):
         self.assets = Assets()
