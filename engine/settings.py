@@ -16,6 +16,8 @@ config = ConfigParser()
 
 config.read(SETTINGS_PATH)
 
+print("Settings loaded.")
+
 
 def checkAndMakeSettings(default_contents=DEFAULT_CONTENTS):
     try:

@@ -236,6 +236,8 @@ class MusicManager:
         pygame.mixer.init()
         self.playlist = []
         self.current_track_index = 0
+        pygame.mixer.music.set_volume(engine.settings.getConfig().getfloat("volume", "music")/100)
+        print(f"Current music volume is {engine.settings.getConfig().getfloat("volume", "music")}%")
 
     def add_track(self, track_path):
         self.playlist.append(track_path)
@@ -243,7 +245,7 @@ class MusicManager:
     def play(self):
         if self.playlist:
             pygame.mixer.music.load(self.playlist[self.current_track_index])
-            pygame.mixer.music.set_volume(engine.settings.getConfig().getfloat("volume", "music"))
+            pygame.mixer.music.set_volume(engine.settings.getConfig().getfloat("volume", "music")/100)
             pygame.mixer.music.play()
 
     @staticmethod
