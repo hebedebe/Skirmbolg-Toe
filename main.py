@@ -1,3 +1,5 @@
+# import ez_profile
+
 import copy
 import json
 import math
@@ -410,23 +412,23 @@ class PhysicsObject(engine.TickableEntity):
         self.pos = self.pos + self.vel * engine.delta()
         self.updateBoundingPoints()
 
-        # Rendering
+    def on_draw(self, *args):
         if self.animation is None:
             pygame.draw.rect(engine.get_surface(), (255, 0, 68), self.rect)
         else:
             engine.manager.blit(self.animation.update_animation(), self.pos + self.animation_pos)
 
-        if engine.debug:
-            pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
-            pygame.draw.rect(engine.get_surface(),
-                             (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
-                             self.check_box_bottom, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
-                             self.check_box_right, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
-                             self.check_box_left, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
-                             self.check_box_top, 1)
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
+        pygame.draw.rect(engine.get_surface(),
+                         (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
+                         self.check_box_bottom, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
+                         self.check_box_right, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
+                         self.check_box_left, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
+                         self.check_box_top, 1)
 
 
 class PushablePhysicsObject(PhysicsObject):
@@ -461,7 +463,7 @@ class Player(engine.TickableEntity):
 
         self.left_key = pygame.K_LEFT
         self.right_key = pygame.K_RIGHT
-        self.jump_key = pygame.K_UP
+        self.jump_key = [pygame.K_UP, pygame.K_SPACE]
         self.interact_key = pygame.K_x
         self.attack_key = pygame.K_z  # currently unused
 
@@ -559,7 +561,6 @@ class Player(engine.TickableEntity):
         self.vel = temp_vel
         self.pos = self.pos + (self.vel + self.controlled_vel) * engine.delta()
         self.updateBoundingPoints()
-        engine.manager.blit(self.animation.update_animation(), self.pos)
 
         # Player input & movement
         self.coyote_time_timer -= engine.delta()
@@ -572,10 +573,10 @@ class Player(engine.TickableEntity):
             self.horizontal += self.acceleration * engine.delta()
         else:
             self.horizontal = engine.math.lerp(self.horizontal, 0, self.controlled_drag * engine.delta())
-        self.horizontal = engine.math.clamp(self.horizontal, 0, 1)
+        self.horizontal = pygame.math.clamp(self.horizontal, 0, 1)
 
         if self.allow_movement:
-            if keys[self.jump_key] and self.coyote_time_timer > 0:
+            if (keys[self.jump_key[0]] or keys[self.jump_key[1]]) and self.coyote_time_timer > 0:
                 self.coyote_time_timer = 0
                 self.vel[1] = self.jump_power
                 play_randomly_pitched_sound(engine.get_asset("jump"))
@@ -625,23 +626,25 @@ class Player(engine.TickableEntity):
             else:
                 self.animation = self.idle_anim_left
 
-        # Debug utils
-        if engine.debug:
-            if pygame.mouse.get_pressed()[0]:
-                self.vel = Vector2()
-                self.pos = Vector2(pygame.mouse.get_pos())
+        if pygame.mouse.get_pressed()[0] and engine.debug:
+            self.vel = Vector2()
+            self.pos = Vector2(pygame.mouse.get_pos())
 
-            pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
-            pygame.draw.rect(engine.get_surface(),
-                             (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
-                             self.check_box_bottom, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
-                             self.check_box_right, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
-                             self.check_box_left, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
-                             self.check_box_top, 1)
-            pygame.draw.circle(engine.get_surface(), (0, 0, 255), self.ground_particle_position, 5)
+    def on_draw(self, *args):
+        engine.manager.blit(self.animation.update_animation(), self.pos)
+
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
+        pygame.draw.rect(engine.get_surface(),
+                         (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
+                         self.check_box_bottom, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
+                         self.check_box_right, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
+                         self.check_box_left, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
+                         self.check_box_top, 1)
+        pygame.draw.circle(engine.get_surface(), (0, 0, 255), self.ground_particle_position, 5)
 
 
 class Platform(engine.TickableEntity):
@@ -656,13 +659,14 @@ class Platform(engine.TickableEntity):
     def __str__(self):
         return f"pos: {self.pos}, size: {self.size}"
 
-    def update(self, *args):
+    def on_draw(self, *args):
         if self.draw:
             pygame.draw.rect(engine.get_surface(), (24, 20, 37), self.draw_rect)
         elif self.image is not None:
             engine.manager.blit(engine.get_asset(self.image), self.pos)
-        if engine.debug:
-            pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
+
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
 
 
 class GrassyPlatform(Platform):
@@ -693,7 +697,27 @@ class VinyPlatform(Platform):
             vine = VinePatch(
                 self.pos + (0, self.size.y),
                 self.size,
-                (50, 80),
+                (50, 120),
+                True
+            )
+            scene = args[0]
+            scene.add_buffered_object(f"{self}_vine", vine)
+            self.are_vines_added = True
+
+        super().update(*args)
+
+
+class FoliagePlatform(GrassyPlatform):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.are_vines_added = False
+
+    def update(self, *args):
+        if not self.are_vines_added:
+            vine = VinePatch(
+                self.pos + (5, self.size.y),
+                self.size,
+                (50, 120),
                 True
             )
             scene = args[0]
@@ -737,11 +761,12 @@ class LevelTrigger(engine.TickableEntity):
             engine.manager.set_state(level)
             scene.cleanup()
 
+    def on_draw(self, *args):
         image = engine.get_asset("exit")
         engine.manager.blit_center(image, self.rect.center)
 
-        if engine.debug:
-            pygame.draw.rect(engine.get_surface(), (255, 255, 200), self.rect, 1)
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 255, 200), self.rect, 1)
 
 
 class BouncePad(engine.TickableEntity):
@@ -795,13 +820,14 @@ class BouncePad(engine.TickableEntity):
             self.idle_anim.reset()
             self.animation = self.idle_anim
 
+    def on_draw(self, *args):
         anim = self.animation.update_animation()
         engine.manager.blit(anim, self.pos)
 
-        if engine.debug:
-            surf = engine.get_surface()
-            pygame.draw.rect(surf, (255, 255, 200), self.trigger_rect, 1)
-            pygame.draw.circle(surf, (0, 0, 255), self.particle_position, 5)
+    def on_draw_debug(self, *args):
+        surf = engine.get_surface()
+        pygame.draw.rect(surf, (255, 255, 200), self.trigger_rect, 1)
+        pygame.draw.circle(surf, (0, 0, 255), self.particle_position, 5)
 
 
 class StrongBouncePad(BouncePad):
@@ -927,17 +953,18 @@ class PushableBouncePad(BouncePad):
             self.vel.x += self.push_speed * engine.delta()
         if type(self.touching_right) in self.push_classes:
             self.vel.x -= self.push_speed * engine.delta()
-        if engine.debug:
-            pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
-            pygame.draw.rect(engine.get_surface(),
-                             (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
-                             self.check_box_bottom, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
-                             self.check_box_right, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
-                             self.check_box_left, 1)
-            pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
-                             self.check_box_top, 1)
+
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 0, 0), self.rect, 1)
+        pygame.draw.rect(engine.get_surface(),
+                         (255, 255, 204) if not self.touching_bottom else (0, 255, 0),
+                         self.check_box_bottom, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_right else (0, 255, 0),
+                         self.check_box_right, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_left else (0, 255, 0),
+                         self.check_box_left, 1)
+        pygame.draw.rect(engine.get_surface(), (255, 255, 204) if not self.touching_top else (0, 255, 0),
+                         self.check_box_top, 1)
 
 
 class PushableStrongBouncePad(PushableBouncePad):
@@ -982,6 +1009,7 @@ class BouncePuff(engine.TickableEntity):
         self.head_idle_anim.serialize()
         self.head_bounce_anim.serialize()
         self.stalk_idle_anim.serialize()
+        self.hitbox = (self.hitbox.center, self.hitbox.radius)
 
     def update(self, *args):
         scene = args[0]
@@ -990,11 +1018,12 @@ class BouncePuff(engine.TickableEntity):
         if not player:
             return
 
+        if type(self.hitbox) is tuple:
+            self.hitbox = pygame.geometry.Circle(*self.hitbox)
+
         player_center = player.rect.center
 
-        hitbox = pygame.geometry.Circle(*self.hitbox)
-
-        if hitbox.colliderect(player.rect):
+        if self.hitbox.colliderect(player.rect):
             direction = (self.pos - player_center).normalize()
             bounce_vector = Vector2(direction.x * self.bounce_force.x, direction.y * self.bounce_force.y)
             player.vel = Vector2(bounce_vector)
@@ -1010,6 +1039,7 @@ class BouncePuff(engine.TickableEntity):
             self.head_animation = self.head_bounce_anim
             self.anim_timer.reset()
 
+    def on_draw(self, *args):
         if self.anim_timer.update():
             self.head_idle_anim.reset()
             self.head_animation = self.head_idle_anim
@@ -1035,11 +1065,11 @@ class BouncePuff(engine.TickableEntity):
         engine.manager.blit_center(stalk_surf, self.pos + (0, stalk_height / 2))
         engine.manager.blit_center(head_anim, self.pos)
 
-        if engine.debug:
-            surface = engine.get_surface()
-            pygame.draw.circle(surface, (255, 255, 200), self.pos, hitbox.radius, 1)
-            if self.stalk_pos:
-                pygame.draw.line(surface, (255, 255, 200), self.pos, self.stalk_pos)
+    def on_draw_debug(self, *args):
+        surface = engine.get_surface()
+        pygame.draw.circle(surface, (255, 255, 200), self.pos, self.hitbox.radius, 1)
+        if self.stalk_pos:
+            pygame.draw.line(surface, (255, 255, 200), self.pos, self.stalk_pos)
 
 
 class Npc(engine.TickableEntity):
@@ -1095,14 +1125,14 @@ class Spring:
         force_delta = force * engine.delta()
 
         self.vel = self.vel + force_delta + (self.gravity * engine.delta())
-        self.vel = self.vel.lerp(Vector2(0, 0), engine.math.clamp(self.dampening * engine.delta(), 0, 1))
+        self.vel = self.vel.lerp(Vector2(0, 0), pygame.math.clamp(self.dampening * engine.delta(), 0, 1))
 
     def update(self):
         self.pos = self.pos + self.vel * engine.delta()
 
-        if engine.debug:
-            surface = engine.get_surface()
-            pygame.draw.circle(surface, (255, 255, 200), self.pos, 5, 1)
+    def draw_debug(self):
+        surface = engine.get_surface()
+        pygame.draw.circle(surface, (255, 255, 200), self.pos, 5, 1)
 
 
 class RotationSpring:
@@ -1122,9 +1152,9 @@ class RotationSpring:
 
 
 class Vine(engine.TickableEntity):
-    def __init__(self, pos, length, use_world_pos=False):
+    def __init__(self, pos, length=None, use_world_pos=False):
         self.pos = pos if use_world_pos else tile_to_world(pos)
-        self.length = length
+        self.length = length if length else random.randint(50, 100)
 
         self.segment_distance = 10
         self.num_segments = self.length // self.segment_distance
@@ -1149,6 +1179,8 @@ class Vine(engine.TickableEntity):
             (62, 137, 72)
         ))
 
+        self.points = []
+
     def update(self, *args):
         scene = args[0]
         player = scene.objects["player"]
@@ -1156,7 +1188,7 @@ class Vine(engine.TickableEntity):
         if not player:
             return
 
-        points = [self.pos]
+        self.points = [self.pos]
 
         for i, spring in enumerate(self.springs):
             target_pos_above = self.pos
@@ -1178,15 +1210,16 @@ class Vine(engine.TickableEntity):
 
             spring.update()
 
-            points.append(spring.pos)
+            self.points.append(spring.pos)
 
-        surface = engine.get_surface()
+    def on_draw(self, *args):
+        pygame.draw.lines(engine.get_surface(), self.colour, False, self.points, 6)
+        pygame.draw.circle(engine.get_surface(), self.colour, self.points[-1] + (1, 0), 3)
 
-        pygame.draw.lines(surface, self.colour, False, points, 6)
-        pygame.draw.circle(surface, self.colour, points[-1] + (1, 0), 3)
-
-        if engine.debug:
-            pygame.draw.lines(surface, (0, 0, 255), False, points, 1)
+    def on_draw_debug(self, *args):
+        pygame.draw.lines(engine.get_surface(), (0, 0, 255), False, self.points, 1)
+        for spring in self.springs:
+            spring.draw_debug()
 
 
 class VinePatch(engine.TickableEntity):
@@ -1199,13 +1232,25 @@ class VinePatch(engine.TickableEntity):
         self.vine_spacing = 12
         self.num_vines = int(self.width // self.vine_spacing)
 
-        self.vines = [
-            Vine(self.pos + (x * self.vine_spacing + random.randint(-3, 3), 0), random.randint(*self.length_range),
-                 True) for x in range(self.num_vines)]
+        self.vines = set()
+
+    def generateVines(self):
+        self.vines = set(Vine(self.pos + (x * self.vine_spacing + random.randint(0, 3), 0), random.randint(*self.length_range),
+             True) for x in range(self.num_vines))
 
     def update(self, *args):
+        if not self.vines:
+            self.generateVines()
         for vine in self.vines:
             vine.update(*args)
+
+    def on_draw(self, *args):
+        for vine in self.vines:
+            vine.on_draw(*args)
+
+    def on_draw_debug(self, *args):
+        for vine in self.vines:
+            vine.on_draw_debug(*args)
 
 
 class GrassPatch(engine.TickableEntity):
@@ -1215,11 +1260,10 @@ class GrassPatch(engine.TickableEntity):
 
         self.interval = 5  # 3 if engine.settings.getConfig().getboolean("graphics", "fancy_grass") else 4
 
-        self.grass = []
+        self.grass = set()
 
     def generateGrass(self):
-        self.grass = [Grass(self.pos + (x * self.interval, 0)) for x in range(int(self.width / self.interval))]
-        random.shuffle(self.grass)
+        self.grass = set(Grass(self.pos + (x * self.interval, 0)) for x in range(int(self.width / self.interval)))
 
     def serialize(self):
         self.grass = []
@@ -1230,6 +1274,16 @@ class GrassPatch(engine.TickableEntity):
                 self.generateGrass()
             for g in self.grass:
                 g.update(*args)
+
+    def on_draw(self, *args):
+        if engine.settings.getConfig().getboolean("graphics", "grass"):
+            for g in self.grass:
+                g.on_draw()
+
+    def on_draw_debug(self, *args):
+        if engine.settings.getConfig().getboolean("graphics", "grass"):
+            for g in self.grass:
+                g.on_draw_debug()
 
 
 class Grass(engine.TickableEntity):
@@ -1259,6 +1313,9 @@ class Grass(engine.TickableEntity):
             (62, 137, 72)
         ))
 
+        self.grass_tip = Vector2()
+        self.points = []
+
     def update(self, *args):
         scene = args[0]
         player = scene.objects["player"]
@@ -1277,19 +1334,23 @@ class Grass(engine.TickableEntity):
 
         self.rot_spring.update()
 
-        grass_tip = self.pos + engine.VEC2_UP.rotate(self.rot_spring.rotation) * self.height
+        self.grass_tip = self.pos + engine.VEC2_UP.rotate(self.rot_spring.rotation) * self.height
 
         surface = engine.get_surface()
-        points = [self.pos - (self.width, 0), self.pos + (self.width, 0), grass_tip]
+        self.points = [self.pos - (self.width, 0), self.pos + (self.width, 0), self.grass_tip]
 
-        pygame.draw.polygon(surface, self.colour, points, width=3)
+    def on_draw(self, *args):
+        if not self.points:
+            return
+
+        pygame.draw.polygon(engine.get_surface(), self.colour, self.points, width=3)
 
         if engine.settings.getConfig().getboolean("graphics", "fancy_grass"):
-            for p in points:
-                pygame.draw.circle(surface, self.colour, p, 1.5)
+            for p in self.points:
+                pygame.draw.circle(engine.get_surface(), self.colour, p, 1.5)
 
-        if engine.debug:
-            pygame.draw.line(surface, (0, 0, 255), self.pos, grass_tip, 1)
+    def on_draw_debug(self, *args):
+        pygame.draw.line(engine.get_surface(), (0, 0, 255), self.pos, self.grass_tip, 1)
 
 
 class Water(engine.TickableEntity):
@@ -1307,6 +1368,7 @@ class Water(engine.TickableEntity):
         self.influence = 2
 
         self.springs = []
+        self.points = []
 
         self.step_size = 10
         self.width = self.anchors[1].x - self.anchors[0].x
@@ -1327,7 +1389,7 @@ class Water(engine.TickableEntity):
         if not player:
             return
 
-        points = []
+        self.points = []
         for i, s in enumerate(self.springs):
             col_circle = pygame.geometry.Circle(s.pos, self.step_size)
 
@@ -1350,20 +1412,22 @@ class Water(engine.TickableEntity):
                 s.update_vel(pos)
             s.update_vel()
             s.update()
-            points.append(s.pos)
+            self.points.append(s.pos)
 
-        surface = engine.get_surface()
+    def on_draw(self, *args):
+        engine.util.draw_polygon_alpha(engine.get_surface(), (0, 149, 233, 150),
+                                       [*self.points, self.anchors[2], self.anchors[3]])
+        pygame.draw.lines(engine.get_surface(), (255, 255, 255), False, self.points, 5)
 
-        engine.util.draw_polygon_alpha(surface, (0, 149, 233, 150), [*points, self.anchors[2], self.anchors[3]])
-        pygame.draw.lines(surface, (255, 255, 255), False, points, 5)
-
-        if engine.debug:
-            pygame.draw.lines(surface, (255, 255, 200), False, points, 1)
-            pygame.draw.polygon(surface, (0, 0, 255), self.anchors, 1)
-            for p in points:
-                pygame.draw.circle(surface, (255, 255, 200), p, 3)
-            for a in self.anchors:
-                pygame.draw.circle(surface, (0, 0, 255), a, 3)
+    def on_draw_debug(self, *args):
+        pygame.draw.lines(engine.get_surface(), (255, 255, 200), False, self.points, 1)
+        pygame.draw.polygon(engine.get_surface(), (0, 0, 255), self.anchors, 1)
+        for p in self.points:
+            pygame.draw.circle(engine.get_surface(), (255, 255, 200), p, 3)
+        for a in self.anchors:
+            pygame.draw.circle(engine.get_surface(), (0, 0, 255), a, 3)
+        for s in self.springs:
+            s.draw_debug()
 
 
 class Light(engine.TickableEntity):
@@ -1453,13 +1517,12 @@ class Collectible(engine.TickableEntity):
             for p in range(20):
                 addParticle(self.trigger_rect.center, scene, "spark_purple")
 
+    def on_draw(self, *args):
         anim = self.animation.update_animation()
-
         engine.manager.blit(anim, self.pos)
 
-        if engine.debug:
-            surface = engine.get_surface()
-            pygame.draw.rect(surface, (255, 255, 200), self.trigger_rect, 1)
+    def on_draw_debug(self, *args):
+        pygame.draw.rect(engine.get_surface(), (255, 255, 200), self.trigger_rect, 1)
 
 
 class Sprite(engine.Sprite):
@@ -1671,10 +1734,10 @@ def load_save(path="gamedata/savedata/save.pickle"):
 
 
 def str_to_class(class_name):
-    return ENTITY_IDS[class_name]
-    # if type(class_name) == list:
-    #     return getattr(sys.modules[class_name[0]], class_name[1])
-    # return getattr(sys.modules[__name__], class_name)
+    # return ENTITY_IDS[class_name]
+    if type(class_name) == list:
+        return getattr(sys.modules[class_name[0]], class_name[1])
+    return getattr(sys.modules[__name__], class_name)
 
 
 def tile_to_world(tile_position):
@@ -1689,6 +1752,7 @@ LEVEL_IDS = {
     "P": PassablePlatform,
     "V": VinyPlatform,
     "G": GrassyPlatform,
+    "F": FoliagePlatform,
     " ": None
 }
 ENTITY_IDS = {
@@ -1697,7 +1761,8 @@ ENTITY_IDS = {
     "Water": Water,
     "Collectible": Collectible,
     "LevelTrigger": LevelTrigger,
-    "VinePatch": VinePatch
+    "VinePatch": VinePatch,
+    "Sprite": Sprite
 }
 
 cached_scene = None

@@ -49,9 +49,20 @@ class State:
 
     def on_draw(self, surface):
         surface.fill(self.background_colour)
+        if self.objects:
+            for o in self.objects.values():
+                if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
+                    o.on_draw()
 
     def on_debug_draw(self, surface):
-        ...
+        if self.objects:
+            for o in self.objects.values():
+                if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
+                    o.on_draw_debug()
 
     def on_event(self, event):
         ...
@@ -63,6 +74,8 @@ class State:
         if self.objects:
             for o in self.objects.values():
                 if issubclass(type(o), engine.TickableEntity):
+                    if not o.enabled:
+                        continue
                     o.update(self)
 
     def on_quit(self):
@@ -186,9 +199,10 @@ class DisplayEngine:
                     state.on_event(event)
                     self.manager.ui_manager.process_events(event)
 
-            state.on_draw(self.surface)
-            state.on_debug_draw(self.surface)
             state.on_update()
+            state.on_draw(self.surface)
+            if engine.debug:
+                state.on_debug_draw(self.surface)
             self.manager.ui_manager.update(self.delta)
             self.manager.ui_manager.draw_ui(self.surface)
 
@@ -296,7 +310,12 @@ class Manager:
 
 
 class TickableEntity:
+    enabled = True
     def update(self, *args): ...
+
+    def on_draw(self, *args): ...
+
+    def on_draw_debug(self, *args): ...
 
     def kill(self): ...
 
@@ -308,7 +327,7 @@ class Sprite(TickableEntity):
         self.image = image
         self.pos = pygame.Vector2(pos)
 
-    def update(self, *args):
+    def on_draw(self, *args):
         engine.manager.blit(engine.manager.assets.get(self.image), self.pos)
 
 
@@ -328,7 +347,7 @@ class ParticleManager(TickableEntity):
         self.particles.append(particle)
         return particle
 
-    def update(self, *args):
+    def on_draw(self, *args):
         kill_list = []
         for p in self.particles:
             p.update()
@@ -416,7 +435,7 @@ class Animation(TickableEntity):
                 self.enabled = False
         return self.frames[self.current_frame]
 
-    def update(self, *args):
+    def on_draw(self, *args):
         frame = self.update_animation()
         if not self.enabled:
             return

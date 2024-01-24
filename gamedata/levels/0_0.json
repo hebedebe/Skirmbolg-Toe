@@ -1,7 +1,7 @@
 {
   "position": "0_0",
   "layout": [
-    "#VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV#",
+    "############################################################",
     "#                                                          #",
     "#                                                          #",
     "#                                                           ",
@@ -9,7 +9,7 @@
     "#                                                           ",
     "#                                                           ",
     "#                                                           ",
-    "#                                                    GGGGGGG",
+    "#                                                    FFFFGGG",
     "#                                                          #",
     "#                                                          #",
     "#                                                          #",
@@ -18,10 +18,10 @@
     "                                                           #",
     "                                                           #",
     "                                                           #",
-    "GGGGGGG       GGGGGGGGGGGGGG                               #",
+    "GFFFFFF       FFFFFFFFFFFFFF                               #",
     "#                                                          #",
     "#                                                          #",
-    "#                                        GGGGGGGGGGGGGG    #",
+    "#                                        FFFFFFFFFFFFFF    #",
     "#                                                          #",
     "#                                                          #",
     "#                                                          #",
@@ -42,7 +42,7 @@
       "name": "background mushroom",
       "args": [
         "background_mushroom_1",
-        [25, 33]
+        [26, 33]
       ]
     },
     {
@@ -50,7 +50,7 @@
       "name": "background mushroom 2",
       "args": [
         "background_mushroom_2",
-        [48, 20]
+        [49, 20]
       ]
     },
     {
@@ -106,7 +106,7 @@
       "name": "level trigger up right",
       "args": [
         [60, 8],
-        "-1_0",
+        "1_1",
         "west top"
       ]
     },
